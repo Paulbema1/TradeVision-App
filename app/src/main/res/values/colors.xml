@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Thème Sombre Professionnel -->
+    <color name="bg_main">#0F172A</color>
+    <color name="bg_card">#1E293B</color>
+    <color name="bg_border">#334155</color>
+
+    <!-- Signaux Strictes -->
+    <color name="signal_buy">#22C55E</color>
+    <color name="signal_sell">#EF4444</color>
+    <color name="signal_wait">#F59E0B</color>
+
+    <!-- Admin & Textes -->
+    <color name="admin_accent">#3B82F6</color>
+    <color name="text_main">#FFFFFF</color>
+    <color name="text_secondary">#94A3B8</color>
+</resources>
