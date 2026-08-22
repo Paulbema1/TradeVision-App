@@ -16,114 +16,76 @@ class AdminControlFragment : Fragment() {
     private var _binding: FragmentAdminControlBinding? = null
     private val binding get() = _binding!!
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentAdminControlBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        binding.btnScanAll.setOnClickListener { triggerGlobalScan() }
+        binding.btnScanAll.setOnClickListener { scanAll() }
         binding.btnClearCache.setOnClickListener { clearCache() }
-        binding.btnRefreshMetrics.setOnClickListener { loadKeysMetrics() }
-
-        loadKeysMetrics()
+        binding.btnRefreshMetrics.setOnClickListener { loadKeys() }
+        loadKeys()
     }
 
-    private fun triggerGlobalScan() {
-        binding.btnScanAll.setEnabled(false)
-        binding.btnScanAll.setText("⚡ SCANNING MARKETS...")
-
+    private fun scanAll() {
+        binding.btnScanAll.isEnabled = false
+        binding.btnScanAll.text = "SCANNING..."
         lifecycleScope.launch {
             try {
                 val api = ApiClient.getApiService(requireContext())
-                val response = api.scanAll()
-
-                if (response.isSuccessful) {
-                    Toast.makeText(
-                        requireContext(),
-                        "⚡ SCAN GLOBAL TERMINÉ & NOTIFS DIFFUSÉES !",
-                        Toast.LENGTH_LONG
-                    ).show()
+                val res = api.scanAll()
+                if (res.isSuccessful) {
+                    Toast.makeText(requireContext(), "Scan global OK", Toast.LENGTH_LONG).show()
                 } else {
-                    Toast.makeText(
-                        requireContext(),
-                        "Erreur scan : ${response.code()}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(requireContext(), "Erreur ${res.code()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(
-                    requireContext(),
-                    "Erreur réseau : ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), "Erreur: ${e.message}", Toast.LENGTH_SHORT).show()
             } finally {
-                binding.btnScanAll.setEnabled(true)
-                binding.btnScanAll.setText("⚡ LAUNCH GLOBAL SCAN")
-                loadKeysMetrics()
+                binding.btnScanAll.isEnabled = true
+                binding.btnScanAll.text = "LAUNCH GLOBAL SCAN"
+                loadKeys()
             }
         }
     }
 
-    private fun loadKeysMetrics() {
-        binding.tvKeysStatus.setText("Chargement des métriques des clés...")
-
+    private fun loadKeys() {
+        binding.tvKeysStatus.text = "Chargement..."
         lifecycleScope.launch {
             try {
                 val api = ApiClient.getApiService(requireContext())
-                val response = api.getKeysMetrics()
-
-                if (response.isSuccessful && response.body() != null) {
-                    val metrics = response.body()!!
-                    val text = metrics.joinToString("\n\n") { item ->
-                        val statusEmoji = if (item.isReady) "🟢 AVAILABLE" else "🔴 COOLDOWN (${item.cooldownRemainingSec}s)"
-                        "${item.name} : $statusEmoji\nTotal Requests: ${item.totalRequests} | Success: ${item.totalSuccess} | 429 Errors: ${item.total429}"
+                val res = api.getKeysMetrics()
+                if (res.isSuccessful && res.body() != null) {
+                    binding.tvKeysStatus.text = res.body()!!.joinToString("\n\n") { k ->
+                        val st = if (k.isReady) "AVAILABLE" else "COOLDOWN ${k.cooldownRemainingSec}s"
+                        "${k.name}: $st\nReq=${k.totalRequests} Success=${k.totalSuccess} 429=${k.total429}"
                     }
-                    binding.tvKeysStatus.setText(text)
                 } else {
-                    binding.tvKeysStatus.setText("Impossible de récupérer les métriques (Code: ${response.code()})")
+                    binding.tvKeysStatus.text = "Erreur ${res.code()}"
                 }
             } catch (e: Exception) {
-                binding.tvKeysStatus.setText("Erreur de connexion : ${e.message}")
+                binding.tvKeysStatus.text = "Erreur: ${e.message}"
             }
         }
     }
 
     private fun clearCache() {
-        binding.btnClearCache.setEnabled(false)
-
+        binding.btnClearCache.isEnabled = false
         lifecycleScope.launch {
             try {
                 val api = ApiClient.getApiService(requireContext())
-                val response = api.clearCache()
-
-                if (response.isSuccessful) {
-                    Toast.makeText(
-                        requireContext(),
-                        "🧹 Cache mémoire vidé avec succès !",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    Toast.makeText(
-                        requireContext(),
-                        "Erreur vidage cache",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            } catch (e: Exception) {
+                val res = api.clearCache()
                 Toast.makeText(
                     requireContext(),
-                    "Erreur : ${e.message}",
+                    if (res.isSuccessful) "Cache vidé" else "Erreur cache",
                     Toast.LENGTH_SHORT
                 ).show()
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Erreur: ${e.message}", Toast.LENGTH_SHORT).show()
             } finally {
-                binding.btnClearCache.setEnabled(true)
+                binding.btnClearCache.isEnabled = true
             }
         }
     }

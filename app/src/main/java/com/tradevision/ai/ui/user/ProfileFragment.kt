@@ -17,37 +17,32 @@ class ProfileFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var sessionManager: SessionManager
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentProfileBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         sessionManager = SessionManager(requireContext())
 
-        val username = sessionManager.getUsername()
-        val role = sessionManager.getRole()
-
-        binding.tvUsername.text = "Username : $username"
-        binding.tvRole.text = "Rôle : $role"
+        binding.tvUsername.text = "Username : ${sessionManager.getUsername()}"
+        binding.tvRole.text = "Role : ${sessionManager.getRole()}"
         binding.tvStatus.text = "Statut du compte : ACTIVE"
 
-        binding.switchNotifications.setOnCheckedChangeListener { _, isChecked ->
-            val statusText = if (isChecked) "Notifications activées" else "Notifications désactivées"
-            Toast.makeText(requireContext(), statusText, Toast.LENGTH_SHORT).show()
+        binding.switchNotifications.setOnCheckedChangeListener { _, checked ->
+            Toast.makeText(
+                requireContext(),
+                if (checked) "Notifications ON" else "Notifications OFF",
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
         binding.btnLogout.setOnClickListener {
             sessionManager.clear()
-            val intent = Intent(requireContext(), LoginActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
+            val i = Intent(requireContext(), LoginActivity::class.java)
+            i.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(i)
             activity?.finish()
         }
     }

@@ -23,49 +23,43 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         sessionManager = SessionManager(this)
-        val role = sessionManager.getRole()
-
-        setupNavigation(role)
+        setupNav(sessionManager.getRole())
     }
 
-    private fun setupNavigation(role: String) {
+    private fun setupNav(role: String) {
         val menu = binding.bottomNavigation.menu
         menu.clear()
 
         if (role == "ADMIN") {
-            menu.add(0, 1, 0, "🕹️ Cockpit").setIcon(android.R.drawable.ic_menu_manage)
-            menu.add(0, 2, 1, "👥 Members").setIcon(android.R.drawable.ic_menu_myplaces)
-            menu.add(0, 3, 2, "⚙️ Profil").setIcon(android.R.drawable.ic_menu_preferences)
-
-            loadFragment(AdminControlFragment())
-
-            binding.bottomNavigation.setOnItemSelectedListener { item ->
-                when (item.itemId) {
-                    1 -> loadFragment(AdminControlFragment())
-                    2 -> loadFragment(AdminMembersFragment())
-                    3 -> loadFragment(ProfileFragment())
+            menu.add(0, 1, 0, "Cockpit").setIcon(android.R.drawable.ic_menu_manage)
+            menu.add(0, 2, 1, "Members").setIcon(android.R.drawable.ic_menu_myplaces)
+            menu.add(0, 3, 2, "Profil").setIcon(android.R.drawable.ic_menu_preferences)
+            open(AdminControlFragment())
+            binding.bottomNavigation.setOnItemSelectedListener {
+                when (it.itemId) {
+                    1 -> open(AdminControlFragment())
+                    2 -> open(AdminMembersFragment())
+                    3 -> open(ProfileFragment())
                 }
                 true
             }
         } else {
-            menu.add(0, 1, 0, "📊 Signal").setIcon(android.R.drawable.ic_menu_compass)
-            menu.add(0, 2, 1, "📜 Historique").setIcon(android.R.drawable.ic_menu_recent_history)
-            menu.add(0, 3, 2, "⚙️ Profil").setIcon(android.R.drawable.ic_menu_preferences)
-
-            loadFragment(SignalFragment())
-
-            binding.bottomNavigation.setOnItemSelectedListener { item ->
-                when (item.itemId) {
-                    1 -> loadFragment(SignalFragment())
-                    2 -> loadFragment(HistoryFragment())
-                    3 -> loadFragment(ProfileFragment())
+            menu.add(0, 1, 0, "Signal").setIcon(android.R.drawable.ic_menu_compass)
+            menu.add(0, 2, 1, "Historique").setIcon(android.R.drawable.ic_menu_recent_history)
+            menu.add(0, 3, 2, "Profil").setIcon(android.R.drawable.ic_menu_preferences)
+            open(SignalFragment())
+            binding.bottomNavigation.setOnItemSelectedListener {
+                when (it.itemId) {
+                    1 -> open(SignalFragment())
+                    2 -> open(HistoryFragment())
+                    3 -> open(ProfileFragment())
                 }
                 true
             }
         }
     }
 
-    private fun loadFragment(fragment: Fragment) {
+    private fun open(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
             .commit()

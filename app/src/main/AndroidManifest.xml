@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.tradevision.ai">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -8,9 +7,9 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/tradevision_logo"
+        android:icon="@mipmap/ic_launcher"
         android:label="TradeVision AI"
-        android:roundIcon="@drawable/tradevision_logo"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TradeVisionAI"
         android:usesCleartextTraffic="true">
@@ -27,7 +26,5 @@
         <activity
             android:name=".ui.main.MainActivity"
             android:exported="false" />
-
     </application>
-
 </manifest>

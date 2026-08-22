@@ -15,11 +15,7 @@ class AdminMembersFragment : Fragment() {
     private var _binding: FragmentAdminMembersBinding? = null
     private val binding get() = _binding!!
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstancesState: Bundle?): View {
         _binding = FragmentAdminMembersBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -30,39 +26,29 @@ class AdminMembersFragment : Fragment() {
     }
 
     private fun loadMembers() {
-        binding.progressBar.setVisibility(View.VISIBLE)
-        binding.tvMembersContent.setText("Chargement de la liste des membres...")
-
+        binding.progressBar.visibility = View.VISIBLE
+        binding.tvMembersContent.text = "Chargement..."
         lifecycleScope.launch {
             try {
                 val api = ApiClient.getApiService(requireContext())
-                val response = api.listUsers()
-
-                if (response.isSuccessful && response.body() != null) {
-                    val users = response.body()!!
+                val res = api.listUsers()
+                if (res.isSuccessful && res.body() != null) {
+                    val users = res.body()!!
                     if (users.isEmpty()) {
-                        binding.tvMembersContent.setText("Aucun membre inscrit pour le moment.")
+                        binding.tvMembersContent.text = "Aucun membre."
                     } else {
-                        val formattedText = users.joinToString("\n\n─────────────────────────────\n\n") { user ->
-                            val fcmStatus = if (user.hasFcmToken) "🟢 Notifications active" else "🔴 Notifications disabled"
-                            val roleBadge = if (user.role == "ADMIN") "👑 ADMIN" else "👤 USER"
-                            
-                            """
-                            ${user.username.uppercase()} ($roleBadge)
-                            Inscrit le : ${user.createdAt}
-                            Statut Push : $fcmStatus
-                            Compte Actif : ${if (user.isActive) "OUI" else "NON"}
-                            """.trimIndent()
+                        binding.tvMembersContent.text = "TOTAL: ${users.size}\n\n" + users.joinToString("\n\n----------------\n\n") { u ->
+                            val notif = if (u.hasFcmToken) "Notif ON" else "Notif OFF"
+                            "${u.username} [${u.role}]\n${u.createdAt}\n$notif"
                         }
-                        binding.tvMembersContent.setText("TOTAL MEMBRES : ${users.size}\n\n$formattedText")
                     }
                 } else {
-                    binding.tvMembersContent.setText("Erreur de chargement (Code: ${response.code()})")
+                    binding.tvMembersContent.text = "Erreur ${res.code()}"
                 }
             } catch (e: Exception) {
-                binding.tvMembersContent.setText("Erreur réseau : ${e.message}")
+                binding.tvMembersContent.text = "Erreur: ${e.message}"
             } finally {
-                binding.progressBar.setVisibility(View.GONE)
+                binding.progressBar.visibility = View.GONE
             }
         }
     }

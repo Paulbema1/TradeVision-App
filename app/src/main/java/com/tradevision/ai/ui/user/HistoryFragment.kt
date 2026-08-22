@@ -15,11 +15,7 @@ class HistoryFragment : Fragment() {
     private var _binding: FragmentHistoryBinding? = null
     private val binding get() = _binding!!
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHistoryBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -30,42 +26,34 @@ class HistoryFragment : Fragment() {
     }
 
     private fun loadHistory() {
-        binding.progressBar.setVisibility(View.VISIBLE)
-        binding.tvHistoryContent.setText("Chargement de l'historique...")
+        binding.progressBar.visibility = View.VISIBLE
+        binding.tvHistoryContent.text = "Chargement..."
 
         lifecycleScope.launch {
             try {
                 val api = ApiClient.getApiService(requireContext())
-                val response = api.getHistory(limit = 30)
-
-                if (response.isSuccessful && response.body() != null) {
-                    val items = response.body()!!
+                val res = api.getHistory(limit = 30)
+                if (res.isSuccessful && res.body() != null) {
+                    val items = res.body()!!
                     if (items.isEmpty()) {
-                        binding.tvHistoryContent.setText("Aucun signal enregistré dans l'historique pour le moment.")
+                        binding.tvHistoryContent.text = "Aucun signal dans l'historique."
                     } else {
-                        val formattedText = items.joinToString("\n\n─────────────────────────────\n\n") { item ->
-                            val actionTag = when (item.action) {
-                                "BUY" -> "🟢 BUY"
-                                "SELL" -> "🔴 SELL"
-                                else -> "🟡 WAIT"
+                        binding.tvHistoryContent.text = items.joinToString("\n\n----------------\n\n") { i ->
+                            val tag = when (i.action) {
+                                "BUY" -> "BUY"
+                                "SELL" -> "SELL"
+                                else -> "WAIT"
                             }
-                            """
-                            $actionTag — ${item.symbol}
-                            Score : ${item.score} / 100   •   Confiance : ${item.confidence}%
-                            Timeframe : ${item.mainTimeframe.uppercase()} (${item.confirmationTimeframe?.uppercase() ?: "4H"})
-                            News Utilisée : ${if (item.newsUsed) "OUI" else "NON"}
-                            Date : ${item.createdAt}
-                            """.trimIndent()
+                            "$tag ${i.symbol}\nScore ${i.score}/100 | Conf ${i.confidence}%\nTF ${i.mainTimeframe} | ${i.createdAt}"
                         }
-                        binding.tvHistoryContent.setText(formattedText)
                     }
                 } else {
-                    binding.tvHistoryContent.setText("Erreur de chargement (Code: ${response.code()})")
+                    binding.tvHistoryContent.text = "Erreur ${res.code()}"
                 }
             } catch (e: Exception) {
-                binding.tvHistoryContent.setText("Erreur réseau : ${e.message}")
+                binding.tvHistoryContent.text = "Erreur: ${e.message}"
             } finally {
-                binding.progressBar.setVisibility(View.GONE)
+                binding.progressBar.visibility = View.GONE
             }
         }
     }
