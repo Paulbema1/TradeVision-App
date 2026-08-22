@@ -73,15 +73,16 @@
         android:textSize="16sp"
         android:textStyle="bold" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnRegister"
-        style="@style/Widget.Material3.Button.OutlinedButton"
+        style="?attr/materialButtonOutlinedStyle"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_marginTop="12dp"
         android:text="S'INSCRIRE"
         android:textColor="@color/admin_accent"
-        android:textSize="16sp" />
+        android:textSize="16sp"
+        app:strokeColor="@color/admin_accent" />
 
     <ProgressBar
         android:id="@+id/progressBar"

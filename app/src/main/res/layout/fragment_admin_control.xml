@@ -11,7 +11,6 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Statut Système -->
         <TextView
             android:id="@+id/tvSystemStatus"
             android:layout_width="wrap_content"
@@ -30,7 +29,6 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
-        <!-- 1. GRAND BOUTON SCAN GLOBAL -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -68,7 +66,6 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 2. GESTION DES CLÉS TWELVE DATA -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -97,7 +94,6 @@
                 android:textSize="13sp" />
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 3. GESTION DU CACHE & ACTIONS -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -113,30 +109,31 @@
             android:layout_marginTop="8dp"
             android:orientation="horizontal">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnClearCache"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="?attr/materialButtonOutlinedStyle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="🧹 CLEAR CACHE"
-                android:textColor="@color/admin_accent" />
+                android:textColor="@color/admin_accent"
+                app:strokeColor="@color/admin_accent" />
 
             <Space
                 android:layout_width="12dp"
                 android:layout_height="wrap_content" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnRefreshMetrics"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="?attr/materialButtonOutlinedStyle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="🔄 REFRESH"
-                android:textColor="@color/text_main" />
+                android:textColor="@color/text_main"
+                app:strokeColor="@color/bg_border" />
         </LinearLayout>
 
-        <!-- 4. ENGINE & SERVICES CHECKLIST -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

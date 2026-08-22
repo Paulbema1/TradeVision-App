@@ -19,7 +19,6 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
-        <!-- CARTE INFO COMPTE -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -67,7 +66,6 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- PREFERENCES PUSH NOTIFICATIONS -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -103,7 +101,6 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- PARAMETRES D'ANALYSE BACKEND (LECTURE SEULE) -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -131,17 +128,17 @@
                 android:textSize="12sp" />
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- BOUTON DECONNEXION -->
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnLogout"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="?attr/materialButtonOutlinedStyle"
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginTop="32dp"
             android:layout_marginBottom="24dp"
             android:text="DÉCONNEXION"
             android:textColor="@color/signal_sell"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            app:strokeColor="@color/signal_sell" />
 
     </LinearLayout>
 </ScrollView>
