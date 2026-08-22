@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.tradevision.ai.data.network.ApiClient
@@ -31,8 +30,8 @@ class HistoryFragment : Fragment() {
     }
 
     private fun loadHistory() {
-        binding.progressBar.visibility = View.VISIBLE
-        binding.tvHistoryContent.text = "Chargement de l'historique..."
+        binding.progressBar.setVisibility(View.VISIBLE)
+        binding.tvHistoryContent.setText("Chargement de l'historique...")
 
         lifecycleScope.launch {
             try {
@@ -42,7 +41,7 @@ class HistoryFragment : Fragment() {
                 if (response.isSuccessful && response.body() != null) {
                     val items = response.body()!!
                     if (items.isEmpty()) {
-                        binding.tvHistoryContent.text = "Aucun signal enregistré dans l'historique pour le moment."
+                        binding.tvHistoryContent.setText("Aucun signal enregistré dans l'historique pour le moment.")
                     } else {
                         val formattedText = items.joinToString("\n\n─────────────────────────────\n\n") { item ->
                             val actionTag = when (item.action) {
@@ -58,15 +57,15 @@ class HistoryFragment : Fragment() {
                             Date : ${item.createdAt}
                             """.trimIndent()
                         }
-                        binding.tvHistoryContent.text = formattedText
+                        binding.tvHistoryContent.setText(formattedText)
                     }
                 } else {
-                    binding.tvHistoryContent.text = "Erreur de chargement (Code: ${response.code()})"
+                    binding.tvHistoryContent.setText("Erreur de chargement (Code: ${response.code()})")
                 }
             } catch (e: Exception) {
-                binding.tvHistoryContent.text = "Erreur réseau : ${e.message}"
+                binding.tvHistoryContent.setText("Erreur réseau : ${e.message}")
             } finally {
-                binding.progressBar.visibility = View.GONE
+                binding.progressBar.setVisibility(View.GONE)
             }
         }
     }

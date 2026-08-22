@@ -30,8 +30,8 @@ class AdminMembersFragment : Fragment() {
     }
 
     private fun loadMembers() {
-        binding.progressBar.visibility = View.VISIBLE
-        binding.tvMembersContent.text = "Chargement de la liste des membres..."
+        binding.progressBar.setVisibility(View.VISIBLE)
+        binding.tvMembersContent.setText("Chargement de la liste des membres...")
 
         lifecycleScope.launch {
             try {
@@ -41,7 +41,7 @@ class AdminMembersFragment : Fragment() {
                 if (response.isSuccessful && response.body() != null) {
                     val users = response.body()!!
                     if (users.isEmpty()) {
-                        binding.tvMembersContent.text = "Aucun membre inscrit pour le moment."
+                        binding.tvMembersContent.setText("Aucun membre inscrit pour le moment.")
                     } else {
                         val formattedText = users.joinToString("\n\n─────────────────────────────\n\n") { user ->
                             val fcmStatus = if (user.hasFcmToken) "🟢 Notifications active" else "🔴 Notifications disabled"
@@ -54,15 +54,15 @@ class AdminMembersFragment : Fragment() {
                             Compte Actif : ${if (user.isActive) "OUI" else "NON"}
                             """.trimIndent()
                         }
-                        binding.tvMembersContent.text = "TOTAL MEMBRES : ${users.size}\n\n$formattedText"
+                        binding.tvMembersContent.setText("TOTAL MEMBRES : ${users.size}\n\n$formattedText")
                     }
                 } else {
-                    binding.tvMembersContent.text = "Erreur de chargement (Code: ${response.code()})"
+                    binding.tvMembersContent.setText("Erreur de chargement (Code: ${response.code()})")
                 }
             } catch (e: Exception) {
-                binding.tvMembersContent.text = "Erreur réseau : ${e.message}"
+                binding.tvMembersContent.setText("Erreur réseau : ${e.message}")
             } finally {
-                binding.progressBar.visibility = View.GONE
+                binding.progressBar.setVisibility(View.GONE)
             }
         }
     }

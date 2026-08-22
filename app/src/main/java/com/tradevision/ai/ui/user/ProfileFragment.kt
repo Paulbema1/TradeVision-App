@@ -34,9 +34,9 @@ class ProfileFragment : Fragment() {
         val username = sessionManager.getUsername()
         val role = sessionManager.getRole()
 
-        binding.tvUsername.text = "Username : $username"
-        binding.tvRole.text = "Rôle : $role"
-        binding.tvStatus.text = "Statut du compte : ACTIVE"
+        binding.tvUsername.setText("Username : $username")
+        binding.tvRole.setText("Rôle : $role")
+        binding.tvStatus.setText("Statut du compte : ACTIVE")
 
         binding.switchNotifications.setOnCheckedChangeListener { _, isChecked ->
             val statusText = if (isChecked) "Notifications activées" else "Notifications désactivées"

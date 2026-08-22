@@ -36,8 +36,8 @@ class AdminControlFragment : Fragment() {
     }
 
     private fun triggerGlobalScan() {
-        binding.btnScanAll.isEnabled = false
-        binding.btnScanAll.text = "⚡ SCANNING MARKETS..."
+        binding.btnScanAll.setEnabled(false)
+        binding.btnScanAll.setText("⚡ SCANNING MARKETS...")
 
         lifecycleScope.launch {
             try {
@@ -64,15 +64,15 @@ class AdminControlFragment : Fragment() {
                     Toast.LENGTH_SHORT
                 ).show()
             } finally {
-                binding.btnScanAll.isEnabled = true
-                binding.btnScanAll.text = "⚡ LAUNCH GLOBAL SCAN"
+                binding.btnScanAll.setEnabled(true)
+                binding.btnScanAll.setText("⚡ LAUNCH GLOBAL SCAN")
                 loadKeysMetrics()
             }
         }
     }
 
     private fun loadKeysMetrics() {
-        binding.tvKeysStatus.text = "Chargement des métriques des clés..."
+        binding.tvKeysStatus.setText("Chargement des métriques des clés...")
 
         lifecycleScope.launch {
             try {
@@ -85,18 +85,18 @@ class AdminControlFragment : Fragment() {
                         val statusEmoji = if (item.isReady) "🟢 AVAILABLE" else "🔴 COOLDOWN (${item.cooldownRemainingSec}s)"
                         "${item.name} : $statusEmoji\nTotal Requests: ${item.totalRequests} | Success: ${item.totalSuccess} | 429 Errors: ${item.total429}"
                     }
-                    binding.tvKeysStatus.text = text
+                    binding.tvKeysStatus.setText(text)
                 } else {
-                    binding.tvKeysStatus.text = "Impossible de récupérer les métriques (Code: ${response.code()})"
+                    binding.tvKeysStatus.setText("Impossible de récupérer les métriques (Code: ${response.code()})")
                 }
             } catch (e: Exception) {
-                binding.tvKeysStatus.text = "Erreur de connexion : ${e.message}"
+                binding.tvKeysStatus.setText("Erreur de connexion : ${e.message}")
             }
         }
     }
 
     private fun clearCache() {
-        binding.btnClearCache.isEnabled = false
+        binding.btnClearCache.setEnabled(false)
 
         lifecycleScope.launch {
             try {
@@ -123,7 +123,7 @@ class AdminControlFragment : Fragment() {
                     Toast.LENGTH_SHORT
                 ).show()
             } finally {
-                binding.btnClearCache.isEnabled = true
+                binding.btnClearCache.setEnabled(true)
             }
         }
     }

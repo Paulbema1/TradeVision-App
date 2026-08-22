@@ -81,8 +81,8 @@ class SignalFragment : Fragment() {
     }
 
     private fun loadSignal(symbol: String) {
-        binding.tvAsset.text = symbol
-        binding.tvAction.text = "LOADING..."
+        binding.tvAsset.setText(symbol)
+        binding.tvAction.setText("LOADING...")
         binding.tvAction.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
 
         lifecycleScope.launch {
@@ -93,16 +93,15 @@ class SignalFragment : Fragment() {
                 if (response.isSuccessful && response.body() != null) {
                     val sig = response.body()!!
 
-                    binding.tvAsset.text = sig.symbol
-                    binding.tvAction.text = sig.action
-                    binding.tvConfidence.text = "Confiance : ${sig.confidence}%"
-                    binding.tvScore.text = "Score : ${sig.score} / 100"
+                    binding.tvAsset.setText(sig.symbol)
+                    binding.tvAction.setText(sig.action)
+                    binding.tvConfidence.setText("Confiance : ${sig.confidence}%")
+                    binding.tvScore.setText("Score : ${sig.score} / 100")
 
                     val mainTf = sig.mainTimeframe.uppercase()
                     val confirmTf = sig.confirmationTimeframe?.uppercase() ?: "4H"
-                    binding.tvTimeframes.text = "Main : $mainTf   •   Confirmation : $confirmTf"
+                    binding.tvTimeframes.setText("Main : $mainTf   •   Confirmation : $confirmTf")
 
-                    // Couleurs selon la décision
                     val actionColor = when (sig.action) {
                         "BUY" -> ContextCompat.getColor(requireContext(), R.color.signal_buy)
                         "SELL" -> ContextCompat.getColor(requireContext(), R.color.signal_sell)
@@ -111,41 +110,40 @@ class SignalFragment : Fragment() {
                     binding.tvAction.setTextColor(actionColor)
 
                     if (sig.action != "WAIT") {
-                        binding.levelsContainer.visibility = View.VISIBLE
-                        binding.tvEntry.text = String.format("%.5f", sig.entryPrice ?: 0.0)
-                        binding.tvSL.text = String.format("%.5f", sig.stopLoss ?: 0.0)
-                        binding.tvTP1.text = String.format("%.5f", sig.takeProfit1 ?: 0.0)
-                        binding.tvTP2.text = String.format("%.5f", sig.takeProfit2 ?: 0.0)
-                        binding.tvTP3.text = String.format("%.5f", sig.takeProfit3 ?: 0.0)
-                        binding.tvRR.text = "Risk / Reward : 1 : ${sig.riskReward ?: 2.5}"
+                        binding.levelsContainer.setVisibility(View.VISIBLE)
+                        binding.tvEntry.setText(String.format("%.5f", sig.entryPrice ?: 0.0))
+                        binding.tvSL.setText(String.format("%.5f", sig.stopLoss ?: 0.0))
+                        binding.tvTP1.setText(String.format("%.5f", sig.takeProfit1 ?: 0.0))
+                        binding.tvTP2.setText(String.format("%.5f", sig.takeProfit2 ?: 0.0))
+                        binding.tvTP3.setText(String.format("%.5f", sig.takeProfit3 ?: 0.0))
+                        binding.tvRR.setText("Risk / Reward : 1 : ${sig.riskReward ?: 2.5}")
                     } else {
-                        binding.levelsContainer.visibility = View.GONE
+                        binding.levelsContainer.setVisibility(View.GONE)
                     }
 
-                    // Synthèse "WHY THIS SIGNAL?"
                     val reasonsText = sig.reasons ?: "Analysis completed with deterministic score."
-                    binding.tvReasons.text = reasonsText
+                    binding.tvReasons.setText(reasonsText)
 
                 } else {
-                    binding.tvAction.text = "ERROR"
-                    binding.tvReasons.text = "Impossible de récupérer les données du marché."
+                    binding.tvAction.setText("ERROR")
+                    binding.tvReasons.setText("Impossible de récupérer les données du marché.")
                 }
             } catch (e: Exception) {
-                binding.tvAction.text = "OFFLINE"
-                binding.tvReasons.text = "Erreur réseau : ${e.message}"
+                binding.tvAction.setText("OFFLINE")
+                binding.tvReasons.setText("Erreur réseau : ${e.message}")
             }
         }
     }
 
     private fun copyLevels() {
-        val asset = binding.tvAsset.text
-        val action = binding.tvAction.text
-        val entry = binding.tvEntry.text
-        val sl = binding.tvSL.text
-        val tp1 = binding.tvTP1.text
-        val tp2 = binding.tvTP2.text
-        val tp3 = binding.tvTP3.text
-        val rr = binding.tvRR.text
+        val asset = binding.tvAsset.text.toString()
+        val action = binding.tvAction.text.toString()
+        val entry = binding.tvEntry.text.toString()
+        val sl = binding.tvSL.text.toString()
+        val tp1 = binding.tvTP1.text.toString()
+        val tp2 = binding.tvTP2.text.toString()
+        val tp3 = binding.tvTP3.text.toString()
+        val rr = binding.tvRR.text.toString()
 
         val formattedText = """
             TradeVision AI Signal
