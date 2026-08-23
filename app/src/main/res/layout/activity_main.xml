@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_main">
+    android:background="@color/bg_main"
+    android:orientation="vertical">
 
-    <!-- Container où s'affichent les onglets -->
+    <!-- BARRE SUPÉRIEURE AVEC MENU TROIS POINTS (⋮) -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/topAppBar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/bg_card"
+        app:title="TradeVision AI"
+        app:titleTextColor="@color/text_main" />
+
+    <!-- CONTENEUR DU SIGNAL PRINCIPAL -->
     <FrameLayout
         android:id="@+id/fragmentContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@id/bottomNavigation" />
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
-    <!-- Barre de navigation en bas (Bottom Navigation) -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavigation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:background="@color/bg_card"
-        app:itemIconTint="@color/admin_accent"
-        app:itemTextColor="@color/text_main" />
-
-</RelativeLayout>
+</LinearLayout>
