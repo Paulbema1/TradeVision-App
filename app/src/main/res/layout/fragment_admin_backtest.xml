@@ -27,6 +27,7 @@
             android:textColor="@color/text_secondary"
             android:textSize="12sp" />
 
+        <!-- SÉLECTEUR D'ACTIFS -->
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -60,6 +61,45 @@
             android:indeterminateTint="@color/admin_accent"
             android:visibility="gone" />
 
+        <!-- CONSOLE DE LOGS EN DIRECT -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardLogs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="@color/bg_main"
+            app:cardCornerRadius="12dp"
+            app:strokeColor="@color/bg_border"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🖥️ CONSOLE DE LOGS EN DIRECT"
+                    android:textColor="@color/admin_accent"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvConsoleLogs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="monospace"
+                    android:text="[System] Initialisation..."
+                    android:textColor="@color/signal_buy"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- RÉSULTATS DU BACKTEST -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardResults"
             android:layout_width="match_parent"

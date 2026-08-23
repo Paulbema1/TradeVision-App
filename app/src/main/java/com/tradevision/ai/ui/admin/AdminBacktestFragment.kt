@@ -17,13 +17,18 @@ import com.google.android.material.card.MaterialCardView
 import com.tradevision.ai.R
 import com.tradevision.ai.data.network.ApiClient
 import com.tradevision.ai.utils.Constants
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class AdminBacktestFragment : Fragment() {
 
     private var _binding: com.tradevision.ai.databinding.FragmentAdminBacktestBinding? = null
     private val binding get() = _binding!!
     private var selectedAsset = "EUR/USD"
+    private val logBuilder = StringBuilder()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -41,13 +46,19 @@ class AdminBacktestFragment : Fragment() {
         binding.btnRunBacktest.setOnClickListener { runBacktest() }
     }
 
+    private fun appendLog(text: String) {
+        val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+        logBuilder.append("[$time] $text\n")
+        binding.tvConsoleLogs.text = logBuilder.toString()
+    }
+
     private fun setupAssetChips() {
         binding.backtestAssetContainer.removeAllViews()
 
         Constants.SUPPORTED_ASSETS.forEach { asset ->
             val button = Button(requireContext()).apply {
                 text = asset
-                textSize = 13f
+                textSize = 12f
                 isAllCaps = true
 
                 val isSelected = (asset == selectedAsset)
@@ -70,7 +81,7 @@ class AdminBacktestFragment : Fragment() {
                 setOnClickListener {
                     selectedAsset = asset
                     setupAssetChips()
-                    Toast.makeText(requireContext(), "Actif sélectionné : $asset", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Actif : $asset", Toast.LENGTH_SHORT).show()
                 }
             }
             binding.backtestAssetContainer.addView(button)
@@ -81,17 +92,30 @@ class AdminBacktestFragment : Fragment() {
         binding.btnRunBacktest.isEnabled = false
         binding.btnRunBacktest.text = "⏳ SIMULATION $selectedAsset..."
         binding.pbBacktest.visibility = View.VISIBLE
+        binding.cardResults.visibility = View.GONE
+        binding.cardLogs.visibility = View.VISIBLE
+
+        logBuilder.clear()
+        appendLog("🚀 Démarrage du Backtest pour $selectedAsset...")
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
+                appendLog("📡 Connexion au serveur Render (Timeout 60s)...")
+                delay(300)
+                appendLog("📦 Chargement des bougies historiques (1H / 4H)...")
+
                 val api = ApiClient.getApiService(requireContext())
                 val response = api.runBacktest(symbol = selectedAsset)
 
                 if (response.isSuccessful && response.body() != null) {
+                    appendLog("🧠 Exécution des moteurs TA + SMC + MTF + News...")
+                    delay(300)
+
                     val body = response.body()!!
                     val m = body.metrics
 
                     if (m != null) {
+                        appendLog("📊 Calcul des pips, Win Rate et Drawdown...")
                         binding.tvWinRate.text = "WIN RATE : ${m.winRatePct}%"
                         binding.tvProfitFactor.text = "Profit Factor : ${m.profitFactor}   |   Net : +${m.netProfitPct}%"
                         binding.tvDrawdown.text = "Max Drawdown : -${m.maxDrawdownPct}%"
@@ -99,6 +123,7 @@ class AdminBacktestFragment : Fragment() {
 
                         val trades = body.trades
                         if (!trades.isNullOrEmpty()) {
+                            appendLog("🎯 ${trades.size} trades simulés dans l'historique.")
                             binding.tvTradesList.text = trades.take(20).joinToString("\n") { t ->
                                 val actionEmoji = if (t.action == "BUY") "🟢 BUY" else "🔴 SELL"
                                 val resEmoji = if (t.result == "WIN") "✅ WIN (+${t.pips} pips)" else "❌ LOSS (${t.pips} pips)"
@@ -108,13 +133,18 @@ class AdminBacktestFragment : Fragment() {
                             binding.tvTradesList.text = "Aucun trade exécuté sur cette période."
                         }
 
+                        appendLog("✅ Simulation terminée avec succès !")
                         binding.cardResults.visibility = View.VISIBLE
                         Toast.makeText(requireContext(), "✅ Backtest $selectedAsset terminé !", Toast.LENGTH_SHORT).show()
+                    } else {
+                        appendLog("❌ Aucune métrique renvoyée par le serveur.")
                     }
                 } else {
+                    appendLog("❌ Erreur serveur HTTP : ${response.code()}")
                     Toast.makeText(requireContext(), "Erreur serveur : ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
+                appendLog("❌ Erreur Réseau : ${e.message}")
                 Toast.makeText(requireContext(), "Erreur : ${e.message}", Toast.LENGTH_LONG).show()
             } finally {
                 if (_binding != null) {
