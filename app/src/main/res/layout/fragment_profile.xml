@@ -105,7 +105,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="PRÉFÉRENCES D'ANALYSE DU MOTEUR"
+            android:text="PRÉFÉRENCES D'ANALYSE (TIMEFRAMES)"
             android:textColor="@color/text_main"
             android:textSize="14sp"
             android:textStyle="bold" />
@@ -116,16 +116,55 @@
             android:layout_marginTop="8dp"
             app:cardBackgroundColor="@color/bg_card"
             app:cardCornerRadius="12dp"
-            app:strokeColor="@color/bg_border"
+            app:strokeColor="@color/admin_accent"
             app:strokeWidth="1dp">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp"
-                android:text="Main Timeframe : 1H\nConfirmation Timeframe : 4H\nAuto Confirmation IA : ON\nMinimum Confidence Required : 70%\nActifs Suivis : EUR/USD, GBP/USD, USD/JPY, XAU/USD"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/tvMainTf"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingVertical="8dp"
+                    android:text="Main Timeframe : 1H  ✏️ (Toucher pour modifier)"
+                    android:textColor="@color/text_main"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="8dp"
+                    android:background="@color/bg_border" />
+
+                <TextView
+                    android:id="@+id/tvConfirmTf"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingVertical="8dp"
+                    android:text="Confirmation Timeframe : 4H  ✏️ (Toucher pour modifier)"
+                    android:textColor="@color/text_main"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="8dp"
+                    android:background="@color/bg_border" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Auto Confirmation IA : ON\nMinimum Confidence Required : 70%\nActifs Suivis : EUR/USD, GBP/USD, USD/JPY, XAU/USD"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp" />
+
+            </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.button.MaterialButton

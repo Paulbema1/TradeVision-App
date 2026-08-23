@@ -5,28 +5,26 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.widget.SwitchCompat
 import androidx.fragment.app.Fragment
-import com.tradevision.ai.R
 import com.tradevision.ai.data.network.SessionManager
+import com.tradevision.ai.databinding.FragmentProfileBinding
 import com.tradevision.ai.ui.auth.LoginActivity
 
 class ProfileFragment : Fragment() {
 
+    private var _binding: FragmentProfileBinding? = null
+    private val binding get() = _binding!!
     private lateinit var sessionManager: SessionManager
-    private var selectedMainTf = "1H"
-    private var selectedConfirmTf = "4H"
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_profile, container, false)
+    ): View {
+        _binding = FragmentProfileBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -37,23 +35,22 @@ class ProfileFragment : Fragment() {
         val username = sessionManager.getUsername()
         val role = sessionManager.getRole()
 
-        view.findViewById<TextView>(R.id.tvUsername)?.text = "Username : $username"
-        view.findViewById<TextView>(R.id.tvRole)?.text = "Rôle : $role"
-        view.findViewById<TextView>(R.id.tvStatus)?.text = "Statut du compte : ACTIVE"
+        binding.tvUsername.text = "Username : $username"
+        binding.tvRole.text = "Rôle : $role"
+        binding.tvStatus.text = "Statut du compte : ACTIVE"
 
-        updateTimeframeText(view)
+        updateTimeframeUI()
 
-        // Clic pour changer le Timeframe Principal
-        view.findViewById<View>(R.id.tvUsername)?.setOnClickListener {
-            showTimeframePicker(view)
-        }
+        // Clics pour modifier les Timeframes
+        binding.tvMainTf.setOnClickListener { showMainTfDialog() }
+        binding.tvConfirmTf.setOnClickListener { showConfirmTfDialog() }
 
-        view.findViewById<SwitchCompat>(R.id.switchNotifications)?.setOnCheckedChangeListener { _, isChecked ->
-            val statusText = if (isChecked) "Notifications PUSH activées" else "Notifications désactivées"
+        binding.switchNotifications.setOnCheckedChangeListener { _, isChecked ->
+            val statusText = if (isChecked) "Notifications activées" else "Notifications désactivées"
             Toast.makeText(requireContext(), statusText, Toast.LENGTH_SHORT).show()
         }
 
-        view.findViewById<Button>(R.id.btnLogout)?.setOnClickListener {
+        binding.btnLogout.setOnClickListener {
             sessionManager.clear()
             val intent = Intent(requireContext(), LoginActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -62,28 +59,46 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    private fun showTimeframePicker(view: View) {
-        val options = arrayOf("15m (Scalping)", "30m (Intraday)", "1H (Standard)", "4H (Swing)")
+    private fun showMainTfDialog() {
+        val options = arrayOf("15m (Scalping)", "30m (Intraday)", "1h (Standard)", "4h (Swing)")
+        val values = arrayOf("15m", "30m", "1h", "4h")
+
         AlertDialog.Builder(requireContext())
-            .setTitle("Choisir le Timeframe Principal")
+            .setTitle("Sélecteur : Timeframe Principal")
             .setItems(options) { _, which ->
-                selectedMainTf = when (which) {
-                    0 -> "15m"
-                    1 -> "30m"
-                    2 -> "1H"
-                    else -> "4H"
-                }
-                updateTimeframeText(view)
-                Toast.makeText(requireContext(), "Timeframe modifié : $selectedMainTf", Toast.LENGTH_SHORT).show()
+                val selected = values[which]
+                sessionManager.saveMainTf(selected)
+                updateTimeframeUI()
+                Toast.makeText(requireContext(), "Main TF réglé sur : ${selected.uppercase()}", Toast.LENGTH_SHORT).show()
             }
             .show()
     }
 
-    private fun updateTimeframeText(view: View) {
-        val text = "Main Timeframe : $selectedMainTf (Toucher pour changer)\n" +
-                "Confirmation Timeframe : $selectedConfirmTf\n" +
-                "Auto Confirmation IA : ON\n" +
-                "Minimum Confidence Required : 70%\n" +
-                "Actifs Suivis : EUR/USD, GBP/USD, USD/JPY, XAU/USD"
+    private fun showConfirmTfDialog() {
+        val options = arrayOf("30m", "1h", "4h (Standard)")
+        val values = arrayOf("30m", "1h", "4h")
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Sélecteur : Timeframe Confirmation")
+            .setItems(options) { _, which ->
+                val selected = values[which]
+                sessionManager.saveConfirmTf(selected)
+                updateTimeframeUI()
+                Toast.makeText(requireContext(), "Confirmation TF réglé sur : ${selected.uppercase()}", Toast.LENGTH_SHORT).show()
+            }
+            .show()
+    }
+
+    private fun updateTimeframeUI() {
+        val mainTf = sessionManager.getMainTf().uppercase()
+        val confirmTf = sessionManager.getConfirmTf().uppercase()
+
+        binding.tvMainTf.text = "Main Timeframe : $mainTf  ✏️ (Toucher pour modifier)"
+        binding.tvConfirmTf.text = "Confirmation Timeframe : $confirmTf  ✏️ (Toucher pour modifier)"
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

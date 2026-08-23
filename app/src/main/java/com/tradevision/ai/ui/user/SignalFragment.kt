@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.tradevision.ai.R
 import com.tradevision.ai.data.network.ApiClient
+import com.tradevision.ai.data.network.SessionManager
 import com.tradevision.ai.databinding.FragmentSignalBinding
 import com.tradevision.ai.utils.Constants
 import kotlinx.coroutines.launch
@@ -24,46 +25,62 @@ class SignalFragment : Fragment() {
 
     private var _binding: FragmentSignalBinding? = null
     private val binding get() = _binding!!
+    private lateinit var sessionManager: SessionManager
     private var selectedAsset = "EUR/USD"
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentSignalBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupChips()
+
+        sessionManager = SessionManager(requireContext())
+
+        setupAssetChips()
         loadSignal(selectedAsset)
+
         binding.btnCopy.setOnClickListener { copyLevels() }
     }
 
-    private fun setupChips() {
+    private fun setupAssetChips() {
         binding.assetContainer.removeAllViews()
+
         Constants.SUPPORTED_ASSETS.forEach { asset ->
-            val btn = Button(requireContext())
-            btn.text = asset
-            btn.textSize = 12f
-            btn.isAllCaps = true
-            if (asset == selectedAsset) {
-                btn.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.admin_accent))
-                btn.setTextColor(Color.WHITE)
-            } else {
-                btn.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.bg_card))
-                btn.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
+            val button = Button(requireContext()).apply {
+                text = asset
+                textSize = 12f
+                isAllCaps = true
+
+                val isSelected = (asset == selectedAsset)
+                if (isSelected) {
+                    setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.admin_accent))
+                    setTextColor(Color.WHITE)
+                } else {
+                    setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.bg_card))
+                    setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
+                }
+
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(0, 0, 16, 0)
+                }
+                layoutParams = params
+
+                setOnClickListener {
+                    selectedAsset = asset
+                    setupAssetChips()
+                    loadSignal(asset)
+                }
             }
-            val lp = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            lp.setMargins(0, 0, 16, 0)
-            btn.layoutParams = lp
-            btn.setOnClickListener {
-                selectedAsset = asset
-                setupChips()
-                loadSignal(asset)
-            }
-            binding.assetContainer.addView(btn)
+            binding.assetContainer.addView(button)
         }
     }
 
@@ -72,65 +89,87 @@ class SignalFragment : Fragment() {
         binding.tvAction.text = "LOADING..."
         binding.tvAction.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
 
+        val mainTf = sessionManager.getMainTf()
+        val confirmTf = sessionManager.getConfirmTf()
+
         lifecycleScope.launch {
             try {
                 val api = ApiClient.getApiService(requireContext())
-                val res = api.analyzeAsset(symbol)
-                if (res.isSuccessful && res.body() != null) {
-                    val s = res.body()!!
-                    binding.tvAsset.text = s.symbol
-                    binding.tvAction.text = s.action
-                    binding.tvConfidence.text = "Confiance : ${s.confidence}%"
-                    binding.tvScore.text = "Score : ${s.score} / 100"
-                    binding.tvTimeframes.text =
-                        "Main : ${s.mainTimeframe.uppercase()}   •   Confirmation : ${(s.confirmationTimeframe ?: "4h").uppercase()}"
+                val response = api.analyzeAsset(symbol, mainTf = mainTf, confirmTf = confirmTf)
 
-                    val color = when (s.action) {
+                if (response.isSuccessful && response.body() != null) {
+                    val sig = response.body()!!
+
+                    binding.tvAsset.text = sig.symbol
+                    binding.tvAction.text = sig.action
+                    binding.tvConfidence.text = "Confiance : ${sig.confidence}%"
+                    binding.tvScore.text = "Score : ${sig.score} / 100"
+
+                    val mainDisplay = sig.mainTimeframe.uppercase()
+                    val confirmDisplay = sig.confirmationTimeframe?.uppercase() ?: "4H"
+                    binding.tvTimeframes.text = "Main : $mainDisplay   •   Confirmation : $confirmDisplay"
+
+                    val actionColor = when (sig.action) {
                         "BUY" -> ContextCompat.getColor(requireContext(), R.color.signal_buy)
                         "SELL" -> ContextCompat.getColor(requireContext(), R.color.signal_sell)
                         else -> ContextCompat.getColor(requireContext(), R.color.signal_wait)
                     }
-                    binding.tvAction.setTextColor(color)
+                    binding.tvAction.setTextColor(actionColor)
 
-                    if (s.action != "WAIT") {
+                    if (sig.action != "WAIT") {
                         binding.levelsContainer.visibility = View.VISIBLE
-                        binding.tvEntry.text = String.format("%.5f", s.entryPrice ?: 0.0)
-                        binding.tvSL.text = String.format("%.5f", s.stopLoss ?: 0.0)
-                        binding.tvTP1.text = String.format("%.5f", s.takeProfit1 ?: 0.0)
-                        binding.tvTP2.text = String.format("%.5f", s.takeProfit2 ?: 0.0)
-                        binding.tvTP3.text = String.format("%.5f", s.takeProfit3 ?: 0.0)
-                        binding.tvRR.text = "Risk / Reward : 1 : ${s.riskReward ?: 2.5}"
+                        binding.tvEntry.text = String.format("%.5f", sig.entryPrice ?: 0.0)
+                        binding.tvSL.text = String.format("%.5f", sig.stopLoss ?: 0.0)
+                        binding.tvTP1.text = String.format("%.5f", sig.takeProfit1 ?: 0.0)
+                        binding.tvTP2.text = String.format("%.5f", sig.takeProfit2 ?: 0.0)
+                        binding.tvTP3.text = String.format("%.5f", sig.takeProfit3 ?: 0.0)
+                        binding.tvRR.text = "Risk / Reward : 1 : ${sig.riskReward ?: 2.5}"
                     } else {
                         binding.levelsContainer.visibility = View.GONE
                     }
-                    binding.tvReasons.text = s.reasons ?: "Analyse terminée."
+
+                    binding.tvReasons.text = sig.reasons ?: "Analyse terminée avec score déterministe."
+
                 } else {
                     binding.tvAction.text = "ERROR"
-                    binding.tvReasons.text = "Impossible de récupérer le signal."
+                    binding.tvReasons.text = "Impossible de récupérer le signal (Code ${response.code()})"
                 }
             } catch (e: Exception) {
                 binding.tvAction.text = "OFFLINE"
-                binding.tvReasons.text = "Erreur réseau : ${e.message}"
+                binding.tvReasons.text = "Vérifiez votre connexion Internet : ${e.message}"
             }
         }
     }
 
     private fun copyLevels() {
-        val text = """
+        val asset = binding.tvAsset.text.toString()
+        val action = binding.tvAction.text.toString()
+        val entry = binding.tvEntry.text.toString()
+        val sl = binding.tvSL.text.toString()
+        val tp1 = binding.tvTP1.text.toString()
+        val tp2 = binding.tvTP2.text.toString()
+        val tp3 = binding.tvTP3.text.toString()
+        val rr = binding.tvRR.text.toString()
+
+        val formattedText = """
             TradeVision AI Signal
-            Asset  : ${binding.tvAsset.text}
-            Action : ${binding.tvAction.text}
-            Entry  : ${binding.tvEntry.text}
-            SL     : ${binding.tvSL.text}
-            TP1    : ${binding.tvTP1.text}
-            TP2    : ${binding.tvTP2.text}
-            TP3    : ${binding.tvTP3.text}
-            ${binding.tvRR.text}
+            ────────────────────
+            Asset  : $asset
+            Action : $action
+            Entry  : $entry
+            SL     : $sl
+            TP1    : $tp1
+            TP2    : $tp2
+            TP3    : $tp3
+            $rr
+            ────────────────────
         """.trimIndent()
 
-        val cm = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        cm.setPrimaryClip(ClipData.newPlainText("TradeVision Signal", text))
-        Toast.makeText(requireContext(), "Niveaux copiés", Toast.LENGTH_SHORT).show()
+        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText("TradeVision Signal", formattedText)
+        clipboard.setPrimaryClip(clip)
+
+        Toast.makeText(requireContext(), "📋 COPY LEVELS : Niveaux copiés !", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroyView() {

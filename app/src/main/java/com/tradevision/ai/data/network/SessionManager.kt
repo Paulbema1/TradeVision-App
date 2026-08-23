@@ -32,6 +32,22 @@ class SessionManager(context: Context) {
         return prefs.getString("username", "") ?: ""
     }
 
+    fun saveMainTf(tf: String) {
+        prefs.edit().putString("main_tf", tf).apply()
+    }
+
+    fun getMainTf(): String {
+        return prefs.getString("main_tf", "1h") ?: "1h"
+    }
+
+    fun saveConfirmTf(tf: String) {
+        prefs.edit().putString("confirm_tf", tf).apply()
+    }
+
+    fun getConfirmTf(): String {
+        return prefs.getString("confirm_tf", "4h") ?: "4h"
+    }
+
     fun isLoggedIn(): Boolean {
         return !getToken().isNullOrEmpty()
     }
