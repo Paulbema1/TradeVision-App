@@ -6,27 +6,17 @@ import retrofit2.http.*
 
 interface ApiService {
 
-    // ── AUTH ──────────────────────────────────────────────
-
     @POST("auth/register")
-    suspend fun register(
-        @Body request: AuthRequest
-    ): Response<TokenResponse>
+    suspend fun register(@Body request: AuthRequest): Response<TokenResponse>
 
     @POST("auth/login")
-    suspend fun login(
-        @Body request: AuthRequest
-    ): Response<TokenResponse>
+    suspend fun login(@Body request: AuthRequest): Response<TokenResponse>
 
     @POST("auth/fcm-token")
-    suspend fun updateFcmToken(
-        @Body request: FcmTokenRequest
-    ): Response<MessageResponse>
+    suspend fun updateFcmToken(@Body request: FcmTokenRequest): Response<MessageResponse>
 
     @GET("auth/me")
     suspend fun getProfile(): Response<UserResponse>
-
-    // ── SIGNAUX ───────────────────────────────────────────
 
     @GET("signals/analyze/{symbol}")
     suspend fun analyzeAsset(
@@ -41,8 +31,6 @@ interface ApiService {
         @Query("limit") limit: Int = 30
     ): Response<List<SignalHistoryItem>>
 
-    // ── ADMIN ─────────────────────────────────────────────
-
     @GET("admin/users")
     suspend fun listUsers(): Response<List<AdminUserListItem>>
 
@@ -54,4 +42,11 @@ interface ApiService {
 
     @POST("admin/scan-all")
     suspend fun scanAll(): Response<Map<String, Any>>
+
+    @POST("admin/backtest")
+    suspend fun runBacktest(
+        @Query("symbol") symbol: String,
+        @Query("main_tf") mainTf: String = "1h",
+        @Query("confirm_tf") confirmTf: String = "4h"
+    ): Response<Map<String, Any>>
 }

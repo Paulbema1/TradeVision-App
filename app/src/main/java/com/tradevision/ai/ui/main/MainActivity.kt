@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -15,6 +14,7 @@ import com.tradevision.ai.R
 import com.tradevision.ai.data.model.FcmTokenRequest
 import com.tradevision.ai.data.network.ApiClient
 import com.tradevision.ai.data.network.SessionManager
+import com.tradevision.ai.ui.admin.AdminBacktestFragment
 import com.tradevision.ai.ui.admin.AdminControlFragment
 import com.tradevision.ai.ui.admin.AdminMembersFragment
 import com.tradevision.ai.ui.user.HistoryFragment
@@ -61,7 +61,6 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val api = ApiClient.getApiService(this@MainActivity)
-                // Enregistre l'appareil actif auprès du serveur Render
                 val deviceToken = "android_device_" + sessionManager.getUsername()
                 api.updateFcmToken(FcmTokenRequest(deviceToken))
             } catch (e: Exception) {
@@ -77,16 +76,18 @@ class MainActivity : AppCompatActivity() {
 
         if (role == "ADMIN") {
             menu.add(0, 1, 0, "🕹️ Cockpit").setIcon(android.R.drawable.ic_menu_manage)
-            menu.add(0, 2, 1, "👥 Members").setIcon(android.R.drawable.ic_menu_myplaces)
-            menu.add(0, 3, 2, "⚙️ Profil").setIcon(android.R.drawable.ic_menu_preferences)
+            menu.add(0, 2, 1, "📈 Backtest").setIcon(android.R.drawable.ic_menu_sort_by_size)
+            menu.add(0, 3, 2, "👥 Members").setIcon(android.R.drawable.ic_menu_myplaces)
+            menu.add(0, 4, 3, "⚙️ Profil").setIcon(android.R.drawable.ic_menu_preferences)
 
             loadFragment(AdminControlFragment())
 
             bottomNav.setOnItemSelectedListener { item ->
                 when (item.itemId) {
                     1 -> loadFragment(AdminControlFragment())
-                    2 -> loadFragment(AdminMembersFragment())
-                    3 -> loadFragment(ProfileFragment())
+                    2 -> loadFragment(AdminBacktestFragment())
+                    3 -> loadFragment(AdminMembersFragment())
+                    4 -> loadFragment(ProfileFragment())
                 }
                 true
             }
