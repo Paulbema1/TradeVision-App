@@ -12,6 +12,7 @@ import com.tradevision.ai.data.network.SessionManager
 import com.tradevision.ai.databinding.ActivityLoginBinding
 import com.tradevision.ai.ui.main.MainActivity
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 class LoginActivity : AppCompatActivity() {
 
@@ -39,11 +40,12 @@ class LoginActivity : AppCompatActivity() {
         val password = binding.etPassword.text?.toString()?.trim() ?: ""
 
         if (username.length < 3) {
-            Toast.makeText(this, "Pseudo (min 3 caractères)", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Le pseudo doit faire au moins 3 caractères", Toast.LENGTH_SHORT).show()
             return
         }
+
         if (password.length < 6) {
-            Toast.makeText(this, "Mot de passe (min 6 caractères)", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Le mot de passe doit faire au moins 6 caractères", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -63,18 +65,33 @@ class LoginActivity : AppCompatActivity() {
                     sessionManager.saveRole(body.role)
                     sessionManager.saveUsername(body.username)
 
-                    val msg = if (isLogin) "Connecté" else "Compte créé"
-                    Toast.makeText(this@LoginActivity, "$msg (${body.role})", Toast.LENGTH_SHORT).show()
-                    startMainActivity()
-                } else {
+                    val actionName = if (isLogin) "Connecté" else "Compte créé"
                     Toast.makeText(
                         this@LoginActivity,
-                        if (isLogin) "Identifiants incorrects" else "Nom d'utilisateur déjà pris",
-                        Toast.LENGTH_LONG
+                        "$actionName avec succès ! Rôle: ${body.role}",
+                        Toast.LENGTH_SHORT
                     ).show()
+
+                    startMainActivity()
+                } else {
+                    val rawError = response.errorBody()?.string() ?: ""
+                    var errorDetail = "Erreur ${response.code()}"
+                    try {
+                        val json = JSONObject(rawError)
+                        if (json.has("detail")) {
+                            errorDetail = json.getString("detail")
+                        }
+                    } catch (e: Exception) {
+                        if (rawError.isNotEmpty()) errorDetail = rawError
+                    }
+                    Toast.makeText(this@LoginActivity, errorDetail, Toast.LENGTH_LONG).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@LoginActivity, "Erreur réseau : ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    this@LoginActivity,
+                    "Erreur réseau : ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
             } finally {
                 binding.progressBar.visibility = View.GONE
                 binding.btnLogin.isEnabled = true
@@ -84,7 +101,8 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun startMainActivity() {
-        startActivity(Intent(this, MainActivity::class.java))
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
         finish()
     }
 }
