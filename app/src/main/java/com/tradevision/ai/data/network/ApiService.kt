@@ -48,5 +48,5 @@ interface ApiService {
         @Query("symbol") symbol: String,
         @Query("main_tf") mainTf: String = "1h",
         @Query("confirm_tf") confirmTf: String = "4h"
-    ): Response<Map<String, Any>>
+    ): Response<BacktestResponse>
 }

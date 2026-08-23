@@ -2,8 +2,6 @@ package com.tradevision.ai.data.model
 
 import com.google.gson.annotations.SerializedName
 
-// ── AUTH ──────────────────────────────────────────────────
-
 data class AuthRequest(
     @SerializedName("username") val username: String,
     @SerializedName("password") val password: String
@@ -28,8 +26,6 @@ data class UserResponse(
     @SerializedName("notifications_enabled") val notificationsEnabled: Boolean,
     @SerializedName("preferred_assets") val preferredAssets: String
 )
-
-// ── SIGNAUX ───────────────────────────────────────────────
 
 data class SignalResponse(
     @SerializedName("symbol") val symbol: String,
@@ -66,8 +62,6 @@ data class SignalHistoryItem(
     @SerializedName("created_at") val createdAt: String
 )
 
-// ── ADMIN ─────────────────────────────────────────────────
-
 data class AdminUserListItem(
     @SerializedName("id") val id: Int,
     @SerializedName("username") val username: String,
@@ -90,4 +84,41 @@ data class KeyMetricItem(
 
 data class MessageResponse(
     @SerializedName("message") val message: String
+)
+
+// ── BACKTEST MODELS ───────────────────────────────────────
+
+data class BacktestMetrics(
+    @SerializedName("initial_balance") val initialBalance: Double,
+    @SerializedName("final_balance") val finalBalance: Double,
+    @SerializedName("net_profit_pct") val netProfitPct: Double,
+    @SerializedName("total_trades") val totalTrades: Int,
+    @SerializedName("closed_trades") val closedTrades: Int,
+    @SerializedName("winning_trades") val winningTrades: Int,
+    @SerializedName("losing_trades") val losingTrades: Int,
+    @SerializedName("win_rate_pct") val winRatePct: Double,
+    @SerializedName("profit_factor") val profitFactor: Double,
+    @SerializedName("expectancy_r") val expectancyR: Double,
+    @SerializedName("max_drawdown_pct") val maxDrawdownPct: Double
+)
+
+data class BacktestTrade(
+    @SerializedName("entry_time") val entryTime: String,
+    @SerializedName("symbol") val symbol: String,
+    @SerializedName("action") val action: String,
+    @SerializedName("score") val score: Int,
+    @SerializedName("entry_price") val entryPrice: Double,
+    @SerializedName("exit_price") val exitPrice: Double,
+    @SerializedName("result") val result: String, // WIN, LOSS
+    @SerializedName("pips") val pips: Double,
+    @SerializedName("hit_tp") val hitTp: Int,
+    @SerializedName("r_multiple") val rMultiple: Double
+)
+
+data class BacktestResponse(
+    @SerializedName("symbol") val symbol: String,
+    @SerializedName("main_tf") val mainTf: String,
+    @SerializedName("period") val period: String,
+    @SerializedName("metrics") val metrics: BacktestMetrics?,
+    @SerializedName("trades") val trades: List<BacktestTrade>?
 )

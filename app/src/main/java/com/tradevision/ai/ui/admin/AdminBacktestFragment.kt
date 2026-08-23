@@ -21,26 +21,28 @@ import kotlinx.coroutines.launch
 
 class AdminBacktestFragment : Fragment() {
 
+    private var _binding: com.tradevision.ai.databinding.FragmentAdminBacktestBinding? = null
+    private val binding get() = _binding!!
     private var selectedAsset = "EUR/USD"
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_admin_backtest, container, false)
+    ): View {
+        _binding = com.tradevision.ai.databinding.FragmentAdminBacktestBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupAssetChips(view)
-        view.findViewById<Button>(R.id.btnRunBacktest)?.setOnClickListener { runBacktest(view) }
+        setupAssetChips()
+        binding.btnRunBacktest.setOnClickListener { runBacktest() }
     }
 
-    private fun setupAssetChips(view: View) {
-        val container = view.findViewById<LinearLayout>(R.id.backtestAssetContainer) ?: return
-        container.removeAllViews()
+    private fun setupAssetChips() {
+        binding.backtestAssetContainer.removeAllViews()
 
         Constants.SUPPORTED_ASSETS.forEach { asset ->
             val button = Button(requireContext()).apply {
@@ -67,68 +69,67 @@ class AdminBacktestFragment : Fragment() {
 
                 setOnClickListener {
                     selectedAsset = asset
-                    setupAssetChips(view)
+                    setupAssetChips()
                 }
             }
-            container.addView(button)
+            binding.backtestAssetContainer.addView(button)
         }
     }
 
-    private fun runBacktest(view: View) {
-        val btn = view.findViewById<Button>(R.id.btnRunBacktest) ?: return
-        val pb = view.findViewById<ProgressBar>(R.id.pbBacktest)
-        val cardResults = view.findViewById<MaterialCardView>(R.id.cardResults)
-        val tvWinRate = view.findViewById<TextView>(R.id.tvWinRate)
-        val tvProfitFactor = view.findViewById<TextView>(R.id.tvProfitFactor)
-        val tvDrawdown = view.findViewById<TextView>(R.id.tvDrawdown)
-        val tvTradesStats = view.findViewById<TextView>(R.id.tvTradesStats)
-        val tvTradesList = view.findViewById<TextView>(R.id.tvTradesList)
+    private fun runBacktest() {
+        binding.btnRunBacktest.isEnabled = false
+        binding.btnRunBacktest.text = "⏳ SIMULATION EN COURS ($selectedAsset)..."
+        binding.pbBacktest.visibility = View.VISIBLE
+        binding.cardResults.visibility = View.GONE
 
-        btn.isEnabled = false
-        btn.text = "⏳ CALCUL EN COURS..."
-        pb?.visibility = View.VISIBLE
-        cardResults?.visibility = View.GONE
-
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val api = ApiClient.getApiService(requireContext())
                 val response = api.runBacktest(symbol = selectedAsset)
 
                 if (response.isSuccessful && response.body() != null) {
                     val body = response.body()!!
-                    val metrics = body["metrics"] as? Map<*, *>
+                    val m = body.metrics
 
-                    if (metrics != null) {
-                        tvWinRate?.text = "WIN RATE : ${metrics["win_rate_pct"]}%"
-                        tvProfitFactor?.text = "Profit Factor : ${metrics["profit_factor"]} | Profit Net : +${metrics["net_profit_pct"]}%"
-                        tvDrawdown?.text = "Max Drawdown : -${metrics["max_drawdown_pct"]}%"
-                        tvTradesStats?.text = "Total Trades: ${metrics["total_trades"]} | Gagnants: ${metrics["winning_trades"]} | Perdants: ${metrics["losing_trades"]}"
+                    if (m != null) {
+                        binding.tvWinRate.text = "WIN RATE : ${m.winRatePct}%"
+                        binding.tvProfitFactor.text = "Profit Factor : ${m.profitFactor}   |   Net : +${m.netProfitPct}%"
+                        binding.tvDrawdown.text = "Max Drawdown : -${m.maxDrawdownPct}%"
+                        binding.tvTradesStats.text = "Total Trades : ${m.totalTrades}   |   Gagnants : ${m.winningTrades}   |   Perdants : ${m.losingTrades}"
 
-                        val trades = body["trades"] as? List<*>
-                        if (trades != null && trades.isNotEmpty()) {
-                            tvTradesList?.text = trades.take(15).joinToString("\n") { trade ->
-                                val t = trade as? Map<*, *>
-                                val actionEmoji = if (t?.get("action") == "BUY") "🟢 BUY" else "🔴 SELL"
-                                val resEmoji = if (t?.get("result") == "WIN") "✅ WIN (+${t["pips"]} pips)" else "❌ LOSS (${t?.get("pips")} pips)"
-                                "$actionEmoji @ ${t?.get("entry_price")} -> $resEmoji"
+                        val trades = body.trades
+                        if (!trades.isNullOrEmpty()) {
+                            binding.tvTradesList.text = trades.take(20).joinToString("\n") { t ->
+                                val actionEmoji = if (t.action == "BUY") "🟢 BUY" else "🔴 SELL"
+                                val resEmoji = if (t.result == "WIN") "✅ WIN (+${t.pips} pips)" else "❌ LOSS (${t.pips} pips)"
+                                "$actionEmoji @ ${t.entryPrice}  ➔  $resEmoji (${t.entryTime})"
                             }
                         } else {
-                            tvTradesList?.text = "Aucun trade historique généré."
+                            binding.tvTradesList.text = "Aucun trade exécuté sur la période."
                         }
 
-                        cardResults?.visibility = View.VISIBLE
-                        Toast.makeText(requireContext(), "✅ Backtest terminé avec succès !", Toast.LENGTH_SHORT).show()
+                        binding.cardResults.visibility = View.VISIBLE
+                        Toast.makeText(requireContext(), "✅ Simulation $selectedAsset terminée !", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(requireContext(), "Aucune métrique retournée", Toast.LENGTH_SHORT).show()
                     }
                 } else {
-                    Toast.makeText(requireContext(), "Erreur backtest (${response.code()})", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Erreur serveur (${response.code()})", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Erreur réseau : ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Erreur : ${e.message}", Toast.LENGTH_LONG).show()
             } finally {
-                btn.isEnabled = true
-                btn.text = "🚀 LANCER LE BACKTEST"
-                pb?.visibility = View.GONE
+                if (_binding != null) {
+                    binding.btnRunBacktest.isEnabled = true
+                    binding.btnRunBacktest.text = "🚀 LANCER LE BACKTEST"
+                    binding.pbBacktest.visibility = View.GONE
+                }
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
