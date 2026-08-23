@@ -47,7 +47,7 @@ class AdminBacktestFragment : Fragment() {
         Constants.SUPPORTED_ASSETS.forEach { asset ->
             val button = Button(requireContext()).apply {
                 text = asset
-                textSize = 12f
+                textSize = 13f
                 isAllCaps = true
 
                 val isSelected = (asset == selectedAsset)
@@ -70,6 +70,7 @@ class AdminBacktestFragment : Fragment() {
                 setOnClickListener {
                     selectedAsset = asset
                     setupAssetChips()
+                    Toast.makeText(requireContext(), "Actif sélectionné : $asset", Toast.LENGTH_SHORT).show()
                 }
             }
             binding.backtestAssetContainer.addView(button)
@@ -78,9 +79,8 @@ class AdminBacktestFragment : Fragment() {
 
     private fun runBacktest() {
         binding.btnRunBacktest.isEnabled = false
-        binding.btnRunBacktest.text = "⏳ SIMULATION EN COURS ($selectedAsset)..."
+        binding.btnRunBacktest.text = "⏳ SIMULATION $selectedAsset..."
         binding.pbBacktest.visibility = View.VISIBLE
-        binding.cardResults.visibility = View.GONE
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
@@ -105,16 +105,14 @@ class AdminBacktestFragment : Fragment() {
                                 "$actionEmoji @ ${t.entryPrice}  ➔  $resEmoji (${t.entryTime})"
                             }
                         } else {
-                            binding.tvTradesList.text = "Aucun trade exécuté sur la période."
+                            binding.tvTradesList.text = "Aucun trade exécuté sur cette période."
                         }
 
                         binding.cardResults.visibility = View.VISIBLE
-                        Toast.makeText(requireContext(), "✅ Simulation $selectedAsset terminée !", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(requireContext(), "Aucune métrique retournée", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "✅ Backtest $selectedAsset terminé !", Toast.LENGTH_SHORT).show()
                     }
                 } else {
-                    Toast.makeText(requireContext(), "Erreur serveur (${response.code()})", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Erreur serveur : ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Erreur : ${e.message}", Toast.LENGTH_LONG).show()

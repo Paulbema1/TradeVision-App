@@ -75,23 +75,27 @@ class MainActivity : AppCompatActivity() {
         menu.clear()
 
         if (role == "ADMIN") {
-            menu.add(0, 1, 0, "🕹️ Cockpit").setIcon(android.R.drawable.ic_menu_manage)
-            menu.add(0, 2, 1, "📈 Backtest").setIcon(android.R.drawable.ic_menu_sort_by_size)
-            menu.add(0, 3, 2, "👥 Members").setIcon(android.R.drawable.ic_menu_myplaces)
-            menu.add(0, 4, 3, "⚙️ Profil").setIcon(android.R.drawable.ic_menu_preferences)
+            // L'ADMIN A ACCÈS À TOUT (5 ONGLETS)
+            menu.add(0, 1, 0, "📊 Signal").setIcon(android.R.drawable.ic_menu_compass)
+            menu.add(0, 2, 1, "📜 Hist.").setIcon(android.R.drawable.ic_menu_recent_history)
+            menu.add(0, 3, 2, "🕹️ Cockpit").setIcon(android.R.drawable.ic_menu_manage)
+            menu.add(0, 4, 3, "📈 Test").setIcon(android.R.drawable.ic_menu_sort_by_size)
+            menu.add(0, 5, 4, "👥 Admin").setIcon(android.R.drawable.ic_menu_myplaces)
 
-            loadFragment(AdminControlFragment())
+            loadFragment(SignalFragment())
 
             bottomNav.setOnItemSelectedListener { item ->
                 when (item.itemId) {
-                    1 -> loadFragment(AdminControlFragment())
-                    2 -> loadFragment(AdminBacktestFragment())
-                    3 -> loadFragment(AdminMembersFragment())
-                    4 -> loadFragment(ProfileFragment())
+                    1 -> loadFragment(SignalFragment())
+                    2 -> loadFragment(HistoryFragment())
+                    3 -> loadFragment(AdminControlFragment())
+                    4 -> loadFragment(AdminBacktestFragment())
+                    5 -> loadFragment(AdminMembersFragment())
                 }
                 true
             }
         } else {
+            // UTILISATEUR PUBLIC (3 ONGLETS SIMPLES)
             menu.add(0, 1, 0, "📊 Signal").setIcon(android.R.drawable.ic_menu_compass)
             menu.add(0, 2, 1, "📜 Historique").setIcon(android.R.drawable.ic_menu_recent_history)
             menu.add(0, 3, 2, "⚙️ Profil").setIcon(android.R.drawable.ic_menu_preferences)
