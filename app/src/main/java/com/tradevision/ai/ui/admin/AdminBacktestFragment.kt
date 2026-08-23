@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.card.MaterialCardView
 import com.tradevision.ai.R
 import com.tradevision.ai.data.network.ApiClient
+import com.tradevision.ai.data.network.SessionManager
 import com.tradevision.ai.utils.Constants
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -27,6 +28,7 @@ class AdminBacktestFragment : Fragment() {
 
     private var _binding: com.tradevision.ai.databinding.FragmentAdminBacktestBinding? = null
     private val binding get() = _binding!!
+    private lateinit var sessionManager: SessionManager
     private var selectedAsset = "EUR/USD"
     private val logBuilder = StringBuilder()
 
@@ -41,6 +43,8 @@ class AdminBacktestFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        sessionManager = SessionManager(requireContext())
 
         setupAssetChips()
         binding.btnRunBacktest.setOnClickListener { runBacktest() }
@@ -89,23 +93,27 @@ class AdminBacktestFragment : Fragment() {
     }
 
     private fun runBacktest() {
+        val mainTf = sessionManager.getMainTf()
+        val confirmTf = sessionManager.getConfirmTf()
+
         binding.btnRunBacktest.isEnabled = false
-        binding.btnRunBacktest.text = "⏳ SIMULATION $selectedAsset..."
+        binding.btnRunBacktest.text = "⏳ SIMULATION $selectedAsset (${mainTf.uppercase()})..."
         binding.pbBacktest.visibility = View.VISIBLE
         binding.cardResults.visibility = View.GONE
         binding.cardLogs.visibility = View.VISIBLE
 
         logBuilder.clear()
         appendLog("🚀 Démarrage du Backtest pour $selectedAsset...")
+        appendLog("⏱️ Timeframe Principal : ${mainTf.uppercase()} | Confirmation : ${confirmTf.uppercase()}")
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 appendLog("📡 Connexion au serveur Render (Timeout 60s)...")
                 delay(300)
-                appendLog("📦 Chargement des bougies historiques (1H / 4H)...")
+                appendLog("📦 Chargement des bougies historiques (${mainTf.uppercase()} / ${confirmTf.uppercase()})...")
 
                 val api = ApiClient.getApiService(requireContext())
-                val response = api.runBacktest(symbol = selectedAsset)
+                val response = api.runBacktest(symbol = selectedAsset, mainTf = mainTf, confirmTf = confirmTf)
 
                 if (response.isSuccessful && response.body() != null) {
                     appendLog("🧠 Exécution des moteurs TA + SMC + MTF + News...")
@@ -116,6 +124,12 @@ class AdminBacktestFragment : Fragment() {
 
                     if (m != null) {
                         appendLog("📊 Calcul des pips, Win Rate et Drawdown...")
+
+                        // Affichage explicite des Timeframes et de la Période
+                        val tfUsedDisplay = "TF Principal : ${body.mainTf.uppercase()}   •   Confirmation : ${confirmTf.uppercase()}"
+                        binding.tvBacktestTfInfo.text = tfUsedDisplay
+                        binding.tvBacktestPeriodInfo.text = "Période simulée : ${body.period}"
+
                         binding.tvWinRate.text = "WIN RATE : ${m.winRatePct}%"
                         binding.tvProfitFactor.text = "Profit Factor : ${m.profitFactor}   |   Net : +${m.netProfitPct}%"
                         binding.tvDrawdown.text = "Max Drawdown : -${m.maxDrawdownPct}%"
@@ -135,7 +149,7 @@ class AdminBacktestFragment : Fragment() {
 
                         appendLog("✅ Simulation terminée avec succès !")
                         binding.cardResults.visibility = View.VISIBLE
-                        Toast.makeText(requireContext(), "✅ Backtest $selectedAsset terminé !", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "✅ Backtest $selectedAsset (${body.mainTf.uppercase()}) terminé !", Toast.LENGTH_SHORT).show()
                     } else {
                         appendLog("❌ Aucune métrique renvoyée par le serveur.")
                     }

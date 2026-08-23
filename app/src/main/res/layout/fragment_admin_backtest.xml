@@ -126,11 +126,36 @@
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
+                <!-- AFFICHAGE CLAIR DU TIMEFRAME ET DE LA PÉRIODE -->
+                <TextView
+                    android:id="@+id/tvBacktestTfInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="TF Principal : 1H   •   Confirmation : 4H"
+                    android:textColor="@color/admin_accent"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvBacktestPeriodInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Période : 2024-01-01 -> 2024-08-22"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="12dp"
+                    android:background="@color/bg_border" />
+
                 <TextView
                     android:id="@+id/tvWinRate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
                     android:text="WIN RATE : 68.5%"
                     android:textColor="@color/signal_buy"
                     android:textSize="24sp"
@@ -141,9 +166,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Profit Factor : 2.15"
+                    android:text="Profit Factor : 2.15   |   Profit Net : +18.5%"
                     android:textColor="@color/text_main"
-                    android:textSize="16sp" />
+                    android:textSize="15sp" />
 
                 <TextView
                     android:id="@+id/tvDrawdown"
