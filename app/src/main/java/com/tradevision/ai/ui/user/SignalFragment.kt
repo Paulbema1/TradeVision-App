@@ -19,6 +19,7 @@ import com.tradevision.ai.data.network.ApiClient
 import com.tradevision.ai.data.network.SessionManager
 import com.tradevision.ai.databinding.FragmentSignalBinding
 import com.tradevision.ai.utils.Constants
+import com.tradevision.ai.utils.NotificationHelper
 import kotlinx.coroutines.launch
 
 class SignalFragment : Fragment() {
@@ -27,6 +28,7 @@ class SignalFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var sessionManager: SessionManager
     private var selectedAsset = "EUR/USD"
+    private var lastNotifiedSignal = ""
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -124,6 +126,21 @@ class SignalFragment : Fragment() {
                         binding.tvTP2.text = String.format("%.5f", sig.takeProfit2 ?: 0.0)
                         binding.tvTP3.text = String.format("%.5f", sig.takeProfit3 ?: 0.0)
                         binding.tvRR.text = "Risk / Reward : 1 : ${sig.riskReward ?: 2.5}"
+
+                        // DÉCLENCHEMENT DE LA NOTIFICATION SYSTÈME ANDROID (SON + VIBRATION + BANNIÈRE)
+                        val signalKey = "${sig.symbol}_${sig.action}_${sig.entryPrice}"
+                        if (signalKey != lastNotifiedSignal && sig.confidence >= 70) {
+                            lastNotifiedSignal = signalKey
+                            NotificationHelper.showSignalNotification(
+                                context = requireContext(),
+                                symbol = sig.symbol,
+                                action = sig.action,
+                                confidence = sig.confidence,
+                                entry = sig.entryPrice,
+                                sl = sig.stopLoss,
+                                tp1 = sig.takeProfit1
+                            )
+                        }
                     } else {
                         binding.levelsContainer.visibility = View.GONE
                     }
