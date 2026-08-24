@@ -13,7 +13,6 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.tradevision.ai.R
 import com.tradevision.ai.data.model.FcmTokenRequest
 import com.tradevision.ai.data.network.ApiClient
@@ -34,7 +33,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
     private var userRole = "USER"
-    private var lastNotifiedKeys = mutableSetOf<String>()
+    private val lastNotifiedKeys = mutableSetOf<String>()
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -53,11 +52,10 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         checkNotificationPermission()
-        setupNavigation(userRole)
+        loadFragment(SignalFragment())
         startBackgroundMonitor()
     }
 
-    // SURVEILLANCE AUTOMATIQUE DES 4 ACTIFS EN ARRIÈRE-PLAN
     private fun startBackgroundMonitor() {
         lifecycleScope.launch {
             while (true) {
@@ -88,9 +86,9 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 } catch (e: Exception) {
-                    // Ignore
+                    // Ignore network exceptions in background
                 }
-                delay(120000) // Vérification automatique toutes les 2 minutes !
+                delay(120000) // Verification automatique toutes les 2 minutes
             }
         }
     }
