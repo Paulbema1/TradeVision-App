@@ -97,68 +97,64 @@ class AdminBacktestFragment : Fragment() {
         val confirmTf = sessionManager.getConfirmTf()
 
         binding.btnRunBacktest.isEnabled = false
-        binding.btnRunBacktest.text = "⏳ SIMULATION $selectedAsset (${mainTf.uppercase()})..."
+        binding.btnRunBacktest.text = "⏳ SIMULATION $selectedAsset..."
         binding.pbBacktest.visibility = View.VISIBLE
         binding.cardResults.visibility = View.GONE
         binding.cardLogs.visibility = View.VISIBLE
 
         logBuilder.clear()
-        appendLog("🚀 Démarrage du Backtest pour $selectedAsset...")
-        appendLog("⏱️ Timeframe Principal : ${mainTf.uppercase()} | Confirmation : ${confirmTf.uppercase()}")
+        appendLog("🚀 Démarrage de l'Audit Backtest pour $selectedAsset...")
+        appendLog("⏱️ Timeframes : Main ${mainTf.uppercase()} | Confirmation ${confirmTf.uppercase()}")
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                appendLog("📡 Connexion au serveur Render (Timeout 60s)...")
-                delay(300)
-                appendLog("📦 Chargement des bougies historiques (${mainTf.uppercase()} / ${confirmTf.uppercase()})...")
+                appendLog("📡 Chargement du dataset 6 Mois sur Render...")
+                delay(200)
 
                 val api = ApiClient.getApiService(requireContext())
                 val response = api.runBacktest(symbol = selectedAsset, mainTf = mainTf, confirmTf = confirmTf)
 
                 if (response.isSuccessful && response.body() != null) {
-                    appendLog("🧠 Exécution des moteurs TA + SMC + MTF + News...")
-                    delay(300)
-
                     val body = response.body()!!
                     val m = body.metrics
 
                     if (m != null) {
-                        appendLog("📊 Calcul des pips, Win Rate et Drawdown...")
+                        appendLog("📊 Analyse des résultats audités...")
 
-                        // Affichage explicite des Timeframes et de la Période
-                        val tfUsedDisplay = "TF Principal : ${body.mainTf.uppercase()}   •   Confirmation : ${confirmTf.uppercase()}"
-                        binding.tvBacktestTfInfo.text = tfUsedDisplay
-                        binding.tvBacktestPeriodInfo.text = "Période simulée : ${body.period}"
+                        binding.tvBacktestTfInfo.text = "TF Principal : ${body.mainTf.uppercase()}   •   Confirmation : ${confirmTf.uppercase()}"
+                        binding.tvBacktestPeriodInfo.text = "Période simulée (6 Mois) : ${body.period}"
 
                         binding.tvWinRate.text = "WIN RATE : ${m.winRatePct}%"
                         binding.tvProfitFactor.text = "Profit Factor : ${m.profitFactor}   |   Net : +${m.netProfitPct}%"
                         binding.tvDrawdown.text = "Max Drawdown : -${m.maxDrawdownPct}%"
-                        binding.tvTradesStats.text = "Total Trades : ${m.totalTrades}   |   Gagnants : ${m.winningTrades}   |   Perdants : ${m.losingTrades}"
+                        binding.tvTradesStats.text = "Clôturés: ${m.closedTrades} (Win: ${m.winningTrades}, Loss: ${m.losingTrades}) | En Cours: ${m.openTrades}"
 
                         val trades = body.trades
                         if (!trades.isNullOrEmpty()) {
-                            appendLog("🎯 ${trades.size} trades simulés dans l'historique.")
-                            binding.tvTradesList.text = trades.take(20).joinToString("\n") { t ->
+                            appendLog("🎯 Total Trades : ${trades.size} (Détails ci-dessous)")
+                            binding.tvTradesList.text = trades.take(25).joinToString("\n") { t ->
                                 val actionEmoji = if (t.action == "BUY") "🟢 BUY" else "🔴 SELL"
-                                val resEmoji = if (t.result == "WIN") "✅ WIN (+${t.pips} pips)" else "❌ LOSS (${t.pips} pips)"
-                                "$actionEmoji @ ${t.entryPrice}  ➔  $resEmoji (${t.entryTime})"
+                                val resEmoji = when (t.result) {
+                                    "WIN" -> "✅ WIN (+${t.pips} pips)"
+                                    "LOSS" -> "❌ LOSS (${t.pips} pips)"
+                                    else -> "⏳ OPEN (Trade en cours)"
+                                }
+                                "$actionEmoji @ ${t.entryPrice} ➔ $resEmoji [${t.entryTime}]"
                             }
                         } else {
                             binding.tvTradesList.text = "Aucun trade exécuté sur cette période."
                         }
 
-                        appendLog("✅ Simulation terminée avec succès !")
+                        appendLog("✅ Audit terminé avec succès !")
                         binding.cardResults.visibility = View.VISIBLE
-                        Toast.makeText(requireContext(), "✅ Backtest $selectedAsset (${body.mainTf.uppercase()}) terminé !", Toast.LENGTH_SHORT).show()
-                    } else {
-                        appendLog("❌ Aucune métrique renvoyée par le serveur.")
+                        Toast.makeText(requireContext(), "✅ Audit Backtest $selectedAsset terminé !", Toast.LENGTH_SHORT).show()
                     }
                 } else {
-                    appendLog("❌ Erreur serveur HTTP : ${response.code()}")
+                    appendLog("❌ Erreur serveur : ${response.code()}")
                     Toast.makeText(requireContext(), "Erreur serveur : ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                appendLog("❌ Erreur Réseau : ${e.message}")
+                appendLog("❌ Erreur : ${e.message}")
                 Toast.makeText(requireContext(), "Erreur : ${e.message}", Toast.LENGTH_LONG).show()
             } finally {
                 if (_binding != null) {
