@@ -94,6 +94,7 @@ data class BacktestMetrics(
     @SerializedName("net_profit_pct") val netProfitPct: Double,
     @SerializedName("total_trades") val totalTrades: Int,
     @SerializedName("closed_trades") val closedTrades: Int,
+    @SerializedName("open_trades") val openTrades: Int = 0,
     @SerializedName("winning_trades") val winningTrades: Int,
     @SerializedName("losing_trades") val losingTrades: Int,
     @SerializedName("win_rate_pct") val winRatePct: Double,
@@ -109,7 +110,7 @@ data class BacktestTrade(
     @SerializedName("score") val score: Int,
     @SerializedName("entry_price") val entryPrice: Double,
     @SerializedName("exit_price") val exitPrice: Double,
-    @SerializedName("result") val result: String, // WIN, LOSS
+    @SerializedName("result") val result: String,
     @SerializedName("pips") val pips: Double,
     @SerializedName("hit_tp") val hitTp: Int,
     @SerializedName("r_multiple") val rMultiple: Double
