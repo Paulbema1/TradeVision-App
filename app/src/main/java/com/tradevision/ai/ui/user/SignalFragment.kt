@@ -47,7 +47,22 @@ class SignalFragment : Fragment() {
         setupAssetChips()
         loadSignal(selectedAsset)
 
-        binding.btnCopy.setOnClickListener { copyLevels() }
+        // BINDING DES COPIES INDIVIDUELLES
+        binding.btnCopyEntry.setOnClickListener { copySingleValue("Entry", binding.tvEntry.text.toString()) }
+        binding.btnCopySL.setOnClickListener { copySingleValue("Stop Loss", binding.tvSL.text.toString()) }
+        binding.btnCopyTP1.setOnClickListener { copySingleValue("TP1", binding.tvTP1.text.toString()) }
+        binding.btnCopyTP2.setOnClickListener { copySingleValue("TP2", binding.tvTP2.text.toString()) }
+        binding.btnCopyTP3.setOnClickListener { copySingleValue("TP3", binding.tvTP3.text.toString()) }
+
+        // COPIE GLOBALE
+        binding.btnCopy.setOnClickListener { copyAllLevels() }
+    }
+
+    private fun copySingleValue(label: String, value: String) {
+        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText(label, value)
+        clipboard.setPrimaryClip(clip)
+        Toast.makeText(requireContext(), "🧾 $label ($value) copié !", Toast.LENGTH_SHORT).show()
     }
 
     private fun setupAssetChips() {
@@ -127,7 +142,6 @@ class SignalFragment : Fragment() {
                         binding.tvTP3.text = String.format("%.5f", sig.takeProfit3 ?: 0.0)
                         binding.tvRR.text = "Risk / Reward : 1 : ${sig.riskReward ?: 2.5}"
 
-                        // DÉCLENCHEMENT DE LA NOTIFICATION SYSTÈME ANDROID (SON + VIBRATION + BANNIÈRE)
                         val signalKey = "${sig.symbol}_${sig.action}_${sig.entryPrice}"
                         if (signalKey != lastNotifiedSignal && sig.confidence >= 70) {
                             lastNotifiedSignal = signalKey
@@ -158,7 +172,7 @@ class SignalFragment : Fragment() {
         }
     }
 
-    private fun copyLevels() {
+    private fun copyAllLevels() {
         val asset = binding.tvAsset.text.toString()
         val action = binding.tvAction.text.toString()
         val entry = binding.tvEntry.text.toString()
@@ -186,7 +200,7 @@ class SignalFragment : Fragment() {
         val clip = ClipData.newPlainText("TradeVision Signal", formattedText)
         clipboard.setPrimaryClip(clip)
 
-        Toast.makeText(requireContext(), "📋 COPY LEVELS : Niveaux copiés !", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "📋 COPY ALL : Résumé complet copié !", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroyView() {

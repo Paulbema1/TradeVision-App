@@ -21,7 +21,7 @@
             android:textSize="12sp"
             android:textStyle="bold" />
 
-        <!-- Sélecteur d'Actifs Horizontaux -->
+        <!-- Sélecteur d'Actifs -->
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -35,7 +35,7 @@
                 android:orientation="horizontal" />
         </HorizontalScrollView>
 
-        <!-- CARTE PRINCIPALE DU SIGNAL -->
+        <!-- CARTE PRINCIPALE -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -63,7 +63,7 @@
                     android:textSize="22sp"
                     android:textStyle="bold" />
 
-                <!-- 2. SIGNAL (BUY / SELL / WAIT) -->
+                <!-- 2. SIGNAL -->
                 <TextView
                     android:id="@+id/tvAction"
                     android:layout_width="wrap_content"
@@ -76,7 +76,7 @@
                     android:textSize="32sp"
                     android:textStyle="bold" />
 
-                <!-- 3 & 4. CONFIANCE ET SCORE SEPARÉS -->
+                <!-- CONFIANCE ET SCORE -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -107,7 +107,7 @@
                         android:textSize="14sp" />
                 </LinearLayout>
 
-                <!-- 5. TIMEFRAMES -->
+                <!-- TIMEFRAMES -->
                 <TextView
                     android:id="@+id/tvTimeframes"
                     android:layout_width="wrap_content"
@@ -124,16 +124,18 @@
                     android:layout_marginVertical="16dp"
                     android:background="@color/bg_border" />
 
-                <!-- 6. NIVEAUX DU TRADE (ENTRY, SL, TP1, TP2, TP3, R:R) -->
+                <!-- 3. NIVEAUX DU TRADE AVEC BOUTONS DE COPIE INDIVIDUELLE 🧾 -->
                 <LinearLayout
                     android:id="@+id/levelsContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
+                    <!-- ENTRY -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
                         android:orientation="horizontal">
                         <TextView
                             android:layout_width="0dp"
@@ -149,12 +151,22 @@
                             android:textColor="@color/text_main"
                             android:textSize="16sp"
                             android:textStyle="bold" />
+                        <ImageButton
+                            android:id="@+id/btnCopyEntry"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="Copy Entry"
+                            android:src="@android:drawable/ic_menu_send"
+                            app:tint="@color/text_secondary" />
                     </LinearLayout>
 
+                    <!-- STOP LOSS -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center_vertical"
                         android:orientation="horizontal">
                         <TextView
                             android:layout_width="0dp"
@@ -170,12 +182,22 @@
                             android:textColor="@color/signal_sell"
                             android:textSize="16sp"
                             android:textStyle="bold" />
+                        <ImageButton
+                            android:id="@+id/btnCopySL"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="Copy SL"
+                            android:src="@android:drawable/ic_menu_send"
+                            app:tint="@color/signal_sell" />
                     </LinearLayout>
 
+                    <!-- TAKE PROFIT 1 -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center_vertical"
                         android:orientation="horizontal">
                         <TextView
                             android:layout_width="0dp"
@@ -191,12 +213,22 @@
                             android:textColor="@color/signal_buy"
                             android:textSize="16sp"
                             android:textStyle="bold" />
+                        <ImageButton
+                            android:id="@+id/btnCopyTP1"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="Copy TP1"
+                            android:src="@android:drawable/ic_menu_send"
+                            app:tint="@color/signal_buy" />
                     </LinearLayout>
 
+                    <!-- TAKE PROFIT 2 -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center_vertical"
                         android:orientation="horizontal">
                         <TextView
                             android:layout_width="0dp"
@@ -212,12 +244,22 @@
                             android:textColor="@color/signal_buy"
                             android:textSize="16sp"
                             android:textStyle="bold" />
+                        <ImageButton
+                            android:id="@+id/btnCopyTP2"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="Copy TP2"
+                            android:src="@android:drawable/ic_menu_send"
+                            app:tint="@color/signal_buy" />
                     </LinearLayout>
 
+                    <!-- TAKE PROFIT 3 -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center_vertical"
                         android:orientation="horizontal">
                         <TextView
                             android:layout_width="0dp"
@@ -233,6 +275,14 @@
                             android:textColor="@color/signal_buy"
                             android:textSize="16sp"
                             android:textStyle="bold" />
+                        <ImageButton
+                            android:id="@+id/btnCopyTP3"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="Copy TP3"
+                            android:src="@android:drawable/ic_menu_send"
+                            app:tint="@color/signal_buy" />
                     </LinearLayout>
 
                     <TextView
@@ -245,14 +295,14 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp" />
 
-                    <!-- 7. BOUTON COPY LEVELS -->
+                    <!-- BOUTON COPIE GLOBALE -->
                     <Button
                         android:id="@+id/btnCopy"
                         android:layout_width="match_parent"
                         android:layout_height="50dp"
                         android:layout_marginTop="16dp"
                         android:backgroundTint="@color/admin_accent"
-                        android:text="📋 COPY LEVELS"
+                        android:text="📋 COPY ALL LEVELS"
                         android:textColor="@color/text_main"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -263,7 +313,7 @@
                     android:layout_marginVertical="16dp"
                     android:background="@color/bg_border" />
 
-                <!-- 8. EXPLICATION DU SIGNAL (WHY THIS SIGNAL?) -->
+                <!-- EXPLICATION -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -279,7 +329,6 @@
                     android:layout_marginTop="8dp"
                     android:background="@color/bg_main"
                     android:padding="12dp"
-                    android:text="🟢 Technical Analysis : Bullish\n🟢 SMC : Bullish Structure\n🟢 Multi-Timeframe : 1H + 4H aligned\n🟢 Momentum : Positive\n🟢 News : Market reaction confirms news\n🟢 AI Confirmation : Confirmed"
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp" />
 
