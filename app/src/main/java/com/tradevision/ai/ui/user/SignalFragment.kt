@@ -21,6 +21,7 @@ import com.tradevision.ai.databinding.FragmentSignalBinding
 import com.tradevision.ai.utils.Constants
 import com.tradevision.ai.utils.NotificationHelper
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 class SignalFragment : Fragment() {
 
@@ -47,7 +48,7 @@ class SignalFragment : Fragment() {
         setupAssetChips()
         loadSignal(selectedAsset)
 
-        // BINDING DES COPIES INDIVIDUELLES
+        // BINDING DES COPIES INDIVIDUELLES 🧾
         binding.btnCopyEntry.setOnClickListener { copySingleValue("Entry", binding.tvEntry.text.toString()) }
         binding.btnCopySL.setOnClickListener { copySingleValue("Stop Loss", binding.tvSL.text.toString()) }
         binding.btnCopyTP1.setOnClickListener { copySingleValue("TP1", binding.tvTP1.text.toString()) }
@@ -135,11 +136,16 @@ class SignalFragment : Fragment() {
 
                     if (sig.action != "WAIT") {
                         binding.levelsContainer.visibility = View.VISIBLE
-                        binding.tvEntry.text = String.format("%.5f", sig.entryPrice ?: 0.0)
-                        binding.tvSL.text = String.format("%.5f", sig.stopLoss ?: 0.0)
-                        binding.tvTP1.text = String.format("%.5f", sig.takeProfit1 ?: 0.0)
-                        binding.tvTP2.text = String.format("%.5f", sig.takeProfit2 ?: 0.0)
-                        binding.tvTP3.text = String.format("%.5f", sig.takeProfit3 ?: 0.0)
+
+                        // FORMATAGE FORCE AVEC UN POINT (.) POUR LES PRIX (Locale.US)
+                        val decCount = if (sig.symbol.contains("JPY")) 3 else (if (sig.symbol.contains("XAU")) 2 else 5)
+                        val formatStr = "%.${decCount}f"
+
+                        binding.tvEntry.text = String.format(Locale.US, formatStr, sig.entryPrice ?: 0.0)
+                        binding.tvSL.text = String.format(Locale.US, formatStr, sig.stopLoss ?: 0.0)
+                        binding.tvTP1.text = String.format(Locale.US, formatStr, sig.takeProfit1 ?: 0.0)
+                        binding.tvTP2.text = String.format(Locale.US, formatStr, sig.takeProfit2 ?: 0.0)
+                        binding.tvTP3.text = String.format(Locale.US, formatStr, sig.takeProfit3 ?: 0.0)
                         binding.tvRR.text = "Risk / Reward : 1 : ${sig.riskReward ?: 2.5}"
 
                         val signalKey = "${sig.symbol}_${sig.action}_${sig.entryPrice}"
@@ -200,7 +206,7 @@ class SignalFragment : Fragment() {
         val clip = ClipData.newPlainText("TradeVision Signal", formattedText)
         clipboard.setPrimaryClip(clip)
 
-        Toast.makeText(requireContext(), "📋 COPY ALL : Résumé complet copié !", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "📋 COPY ALL : Résumé copié (Prix avec points) !", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroyView() {
