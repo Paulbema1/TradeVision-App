@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.tradevision.ai.R
 import com.tradevision.ai.data.model.FcmTokenRequest
 import com.tradevision.ai.data.network.ApiClient
@@ -86,9 +87,9 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 } catch (e: Exception) {
-                    // Ignore network exceptions in background
+                    // Ignore
                 }
-                delay(120000) // Verification automatique toutes les 2 minutes
+                delay(15000) // Vérification dynamique toutes les 15 secondes en arrière-plan !
             }
         }
     }

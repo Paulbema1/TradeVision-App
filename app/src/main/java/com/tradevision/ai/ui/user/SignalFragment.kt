@@ -20,6 +20,8 @@ import com.tradevision.ai.data.network.SessionManager
 import com.tradevision.ai.databinding.FragmentSignalBinding
 import com.tradevision.ai.utils.Constants
 import com.tradevision.ai.utils.NotificationHelper
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -30,6 +32,7 @@ class SignalFragment : Fragment() {
     private lateinit var sessionManager: SessionManager
     private var selectedAsset = "EUR/USD"
     private var lastNotifiedSignal = ""
+    private var autoRefreshJob: Job? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,7 +50,7 @@ class SignalFragment : Fragment() {
 
         setupAssetChips()
         checkTestStatus()
-        loadSignal(selectedAsset)
+        startAutoRefreshLoop()
 
         binding.btnCopyEntry.setOnClickListener { copySingleValue("Entry", binding.tvEntry.text.toString()) }
         binding.btnCopySL.setOnClickListener { copySingleValue("Stop Loss", binding.tvSL.text.toString()) }
@@ -56,6 +59,18 @@ class SignalFragment : Fragment() {
         binding.btnCopyTP3.setOnClickListener { copySingleValue("TP3", binding.tvTP3.text.toString()) }
 
         binding.btnCopy.setOnClickListener { copyAllLevels() }
+    }
+
+    // BOUCLE DE RAFRAÎCHISSEMENT AUTOMATIQUE TOUTES LES 30 SECONDES
+    private fun startAutoRefreshLoop() {
+        autoRefreshJob?.cancel()
+        autoRefreshJob = viewLifecycleOwner.lifecycleScope.launch {
+            while (true) {
+                checkTestStatus()
+                loadSignal(selectedAsset)
+                delay(30000) // 30 secondes
+            }
+        }
     }
 
     private fun checkTestStatus() {
@@ -117,10 +132,6 @@ class SignalFragment : Fragment() {
     }
 
     private fun loadSignal(symbol: String) {
-        binding.tvAsset.text = symbol
-        binding.tvAction.text = "LOADING..."
-        binding.tvAction.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
-
         val mainTf = sessionManager.getMainTf()
         val confirmTf = sessionManager.getConfirmTf()
 
@@ -224,6 +235,7 @@ class SignalFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        autoRefreshJob?.cancel()
         _binding = null
     }
 }
