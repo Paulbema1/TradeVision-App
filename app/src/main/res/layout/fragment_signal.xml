@@ -11,27 +11,6 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- 🧪 BANDEAU D'AVERTISSEMENT MODE TEST LAB -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardTestBanner"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:visibility="gone"
-            app:cardBackgroundColor="@color/signal_wait"
-            app:cardCornerRadius="8dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="10dp"
-                android:gravity="center"
-                android:text="🧪 MODE SIMULATION TEST LAB (MARCHÉ SIMULÉ)"
-                android:textColor="@color/black"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-        </com.google.android.material.card.MaterialCardView>
-
         <!-- Statut du Service -->
         <TextView
             android:id="@+id/tvServiceStatus"

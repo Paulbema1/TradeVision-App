@@ -49,7 +49,6 @@ class SignalFragment : Fragment() {
         sessionManager = SessionManager(requireContext())
 
         setupAssetChips()
-        checkTestStatus()
         startAutoRefreshLoop()
 
         binding.btnCopyEntry.setOnClickListener { copySingleValue("Entry", binding.tvEntry.text.toString()) }
@@ -61,29 +60,12 @@ class SignalFragment : Fragment() {
         binding.btnCopy.setOnClickListener { copyAllLevels() }
     }
 
-    // BOUCLE DE RAFRAÎCHISSEMENT AUTOMATIQUE TOUTES LES 30 SECONDES
     private fun startAutoRefreshLoop() {
         autoRefreshJob?.cancel()
         autoRefreshJob = viewLifecycleOwner.lifecycleScope.launch {
             while (true) {
-                checkTestStatus()
                 loadSignal(selectedAsset)
-                delay(30000) // 30 secondes
-            }
-        }
-    }
-
-    private fun checkTestStatus() {
-        lifecycleScope.launch {
-            try {
-                val api = ApiClient.getApiService(requireContext())
-                val resp = api.getTestStatus()
-                if (resp.isSuccessful && resp.body() != null) {
-                    val isSimulation = resp.body()!!["simulation_mode"] as? Boolean ?: false
-                    binding.cardTestBanner.visibility = if (isSimulation) View.VISIBLE else View.GONE
-                }
-            } catch (e: Exception) {
-                binding.cardTestBanner.visibility = View.GONE
+                delay(30000)
             }
         }
     }
@@ -132,6 +114,10 @@ class SignalFragment : Fragment() {
     }
 
     private fun loadSignal(symbol: String) {
+        binding.tvAsset.text = symbol
+        binding.tvAction.text = "LOADING..."
+        binding.tvAction.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
+
         val mainTf = sessionManager.getMainTf()
         val confirmTf = sessionManager.getConfirmTf()
 

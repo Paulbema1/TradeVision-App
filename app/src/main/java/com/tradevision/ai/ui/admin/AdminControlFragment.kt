@@ -32,43 +32,7 @@ class AdminControlFragment : Fragment() {
         binding.btnClearCache.setOnClickListener { clearCache() }
         binding.btnRefreshMetrics.setOnClickListener { loadKeysMetrics() }
 
-        checkTestModeStatus()
-
-        binding.switchTestLabMode.setOnCheckedChangeListener { _, isChecked ->
-            toggleTestLabMode(isChecked)
-        }
-
         loadKeysMetrics()
-    }
-
-    private fun checkTestModeStatus() {
-        lifecycleScope.launch {
-            try {
-                val api = ApiClient.getApiService(requireContext())
-                val resp = api.getTestStatus()
-                if (resp.isSuccessful && resp.body() != null) {
-                    val isSimulation = resp.body()!!["simulation_mode"] as? Boolean ?: false
-                    binding.switchTestLabMode.isChecked = isSimulation
-                }
-            } catch (e: Exception) {
-                // Ignore
-            }
-        }
-    }
-
-    private fun toggleTestLabMode(enable: Boolean) {
-        lifecycleScope.launch {
-            try {
-                val api = ApiClient.getApiService(requireContext())
-                val resp = api.setTestMode(mapOf("enabled" to enable))
-                if (resp.isSuccessful) {
-                    val statusText = if (enable) "🧪 MODE SIMULATION ACTIVÉ !" else "🌐 Mode Marché Réel réactivé"
-                    Toast.makeText(requireContext(), statusText, Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Erreur basculement mode test", Toast.LENGTH_SHORT).show()
-            }
-        }
     }
 
     private fun triggerGlobalScan() {

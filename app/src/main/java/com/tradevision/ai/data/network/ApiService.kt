@@ -49,11 +49,4 @@ interface ApiService {
         @Query("main_tf") mainTf: String = "1h",
         @Query("confirm_tf") confirmTf: String = "4h"
     ): Response<BacktestResponse>
-
-    // 🧪 ENDPOINTS TEST LAB
-    @POST("test/mode")
-    suspend fun setTestMode(@Body request: Map<String, Boolean>): Response<Map<String, Any>>
-
-    @GET("test/status")
-    suspend fun getTestStatus(): Response<Map<String, Any>>
 }
