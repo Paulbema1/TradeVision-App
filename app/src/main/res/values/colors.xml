@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Thème Sombre Professionnel -->
+    <!-- Couleurs standards Android (Compatibilité Styles) -->
+    <color name="colorPrimary">#3B82F6</color>
+    <color name="colorPrimaryDark">#0F172A</color>
+    <color name="colorAccent">#3B82F6</color>
+
+    <!-- Thème Sombre Professionnel TradeVision AI -->
     <color name="bg_main">#0F172A</color>
     <color name="bg_card">#1E293B</color>
     <color name="bg_border">#334155</color>

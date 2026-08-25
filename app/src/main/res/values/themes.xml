@@ -1,18 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Thème principal de l'application TradeVision AI -->
     <style name="Theme.TradeVisionAI" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        
-        <!-- Couleurs globales -->
-        <item name="colorPrimary">@color/admin_accent</item>
-        <item name="colorOnPrimary">@color/text_main</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
         <item name="android:windowBackground">@color/bg_main</item>
         <item name="colorSurface">@color/bg_card</item>
         <item name="colorOnSurface">@color/text_main</item>
-
-        <!-- Barre d'état en haut (Heure, Batterie...) -->
         <item name="android:statusBarColor">@color/bg_main</item>
         <item name="android:windowLightStatusBar">false</item>
-        
     </style>
 </resources>
