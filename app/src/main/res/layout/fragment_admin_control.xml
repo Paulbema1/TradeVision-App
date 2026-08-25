@@ -29,6 +29,42 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
+        <!-- 🧪 CARTE CONTRÔLE MODE SIMULATION TEST LAB -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="@color/bg_card"
+            app:cardCornerRadius="16dp"
+            app:strokeColor="@color/signal_wait"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/switchTestLabMode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🧪 MODE SIMULATION TEST LAB"
+                    android:textColor="@color/signal_wait"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Activer pour écouter les données simulées injectées par le Test Lab Web"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- SCAN GLOBAL -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -66,6 +102,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- CLÉS TWELVE DATA -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -94,6 +131,7 @@
                 android:textSize="13sp" />
         </com.google.android.material.card.MaterialCardView>
 
+        <!-- CACHE & MAINTENANCE -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -134,6 +172,7 @@
                 app:strokeColor="@color/bg_border" />
         </LinearLayout>
 
+        <!-- ENGINE CHECKLIST -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

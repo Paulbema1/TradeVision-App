@@ -46,17 +46,31 @@ class SignalFragment : Fragment() {
         sessionManager = SessionManager(requireContext())
 
         setupAssetChips()
+        checkTestStatus()
         loadSignal(selectedAsset)
 
-        // BINDING DES COPIES INDIVIDUELLES 🧾
         binding.btnCopyEntry.setOnClickListener { copySingleValue("Entry", binding.tvEntry.text.toString()) }
         binding.btnCopySL.setOnClickListener { copySingleValue("Stop Loss", binding.tvSL.text.toString()) }
         binding.btnCopyTP1.setOnClickListener { copySingleValue("TP1", binding.tvTP1.text.toString()) }
         binding.btnCopyTP2.setOnClickListener { copySingleValue("TP2", binding.tvTP2.text.toString()) }
         binding.btnCopyTP3.setOnClickListener { copySingleValue("TP3", binding.tvTP3.text.toString()) }
 
-        // COPIE GLOBALE
         binding.btnCopy.setOnClickListener { copyAllLevels() }
+    }
+
+    private fun checkTestStatus() {
+        lifecycleScope.launch {
+            try {
+                val api = ApiClient.getApiService(requireContext())
+                val resp = api.getTestStatus()
+                if (resp.isSuccessful && resp.body() != null) {
+                    val isSimulation = resp.body()!!["simulation_mode"] as? Boolean ?: false
+                    binding.cardTestBanner.visibility = if (isSimulation) View.VISIBLE else View.GONE
+                }
+            } catch (e: Exception) {
+                binding.cardTestBanner.visibility = View.GONE
+            }
+        }
     }
 
     private fun copySingleValue(label: String, value: String) {
@@ -137,7 +151,6 @@ class SignalFragment : Fragment() {
                     if (sig.action != "WAIT") {
                         binding.levelsContainer.visibility = View.VISIBLE
 
-                        // FORMATAGE FORCE AVEC UN POINT (.) POUR LES PRIX (Locale.US)
                         val decCount = if (sig.symbol.contains("JPY")) 3 else (if (sig.symbol.contains("XAU")) 2 else 5)
                         val formatStr = "%.${decCount}f"
 
@@ -206,7 +219,7 @@ class SignalFragment : Fragment() {
         val clip = ClipData.newPlainText("TradeVision Signal", formattedText)
         clipboard.setPrimaryClip(clip)
 
-        Toast.makeText(requireContext(), "📋 COPY ALL : Résumé copié (Prix avec points) !", Toast.LENGTH_SHORT).show()
+        Toast.makeText(requireContext(), "📋 COPY ALL : Résumé copié !", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroyView() {

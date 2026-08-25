@@ -4,39 +4,76 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.tradevision.ai.R
 import com.tradevision.ai.data.network.ApiClient
+import com.tradevision.ai.databinding.FragmentAdminControlBinding
 import kotlinx.coroutines.launch
 
 class AdminControlFragment : Fragment() {
+
+    private var _binding: FragmentAdminControlBinding? = null
+    private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_admin_control, container, false)
+    ): View {
+        _binding = FragmentAdminControlBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.findViewById<Button>(R.id.btnScanAll)?.setOnClickListener { triggerGlobalScan(view) }
-        view.findViewById<Button>(R.id.btnClearCache)?.setOnClickListener { clearCache(view) }
-        view.findViewById<Button>(R.id.btnRefreshMetrics)?.setOnClickListener { loadKeysMetrics(view) }
+        binding.btnScanAll.setOnClickListener { triggerGlobalScan() }
+        binding.btnClearCache.setOnClickListener { clearCache() }
+        binding.btnRefreshMetrics.setOnClickListener { loadKeysMetrics() }
 
-        loadKeysMetrics(view)
+        checkTestModeStatus()
+
+        binding.switchTestLabMode.setOnCheckedChangeListener { _, isChecked ->
+            toggleTestLabMode(isChecked)
+        }
+
+        loadKeysMetrics()
     }
 
-    private fun triggerGlobalScan(view: View) {
-        val btn = view.findViewById<Button>(R.id.btnScanAll) ?: return
-        btn.isEnabled = false
-        btn.text = "⚡ SCANNING MARKETS..."
+    private fun checkTestModeStatus() {
+        lifecycleScope.launch {
+            try {
+                val api = ApiClient.getApiService(requireContext())
+                val resp = api.getTestStatus()
+                if (resp.isSuccessful && resp.body() != null) {
+                    val isSimulation = resp.body()!!["simulation_mode"] as? Boolean ?: false
+                    binding.switchTestLabMode.isChecked = isSimulation
+                }
+            } catch (e: Exception) {
+                // Ignore
+            }
+        }
+    }
+
+    private fun toggleTestLabMode(enable: Boolean) {
+        lifecycleScope.launch {
+            try {
+                val api = ApiClient.getApiService(requireContext())
+                val resp = api.setTestMode(mapOf("enabled" to enable))
+                if (resp.isSuccessful) {
+                    val statusText = if (enable) "🧪 MODE SIMULATION ACTIVÉ !" else "🌐 Mode Marché Réel réactivé"
+                    Toast.makeText(requireContext(), statusText, Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Erreur basculement mode test", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun triggerGlobalScan() {
+        binding.btnScanAll.isEnabled = false
+        binding.btnScanAll.text = "⚡ SCANNING MARKETS..."
 
         lifecycleScope.launch {
             try {
@@ -63,16 +100,14 @@ class AdminControlFragment : Fragment() {
                     Toast.LENGTH_SHORT
                 ).show()
             } finally {
-                btn.isEnabled = true
-                btn.text = "⚡ LAUNCH GLOBAL SCAN"
-                loadKeysMetrics(view)
+                binding.btnScanAll.isEnabled = true
+                binding.btnScanAll.text = "⚡ LAUNCH GLOBAL SCAN"
+                loadKeysMetrics()
             }
         }
     }
 
-    private fun loadKeysMetrics(view: View) {
-        val tvKeysStatus = view.findViewById<TextView>(R.id.tvKeysStatus) ?: return
-
+    private fun loadKeysMetrics() {
         lifecycleScope.launch {
             try {
                 val api = ApiClient.getApiService(requireContext())
@@ -84,19 +119,18 @@ class AdminControlFragment : Fragment() {
                         val statusEmoji = if (item.isReady) "🟢 AVAILABLE" else "🔴 COOLDOWN (${item.cooldownRemainingSec}s)"
                         "${item.name} : $statusEmoji\nReq=${item.totalRequests} | Success=${item.totalSuccess} | 429=${item.total429}"
                     }
-                    tvKeysStatus.text = text
+                    binding.tvKeysStatus.text = text
                 } else {
-                    tvKeysStatus.text = "Clés Twelve Data : 🟢 AVAILABLE (Active)"
+                    binding.tvKeysStatus.text = "Clés Twelve Data : 🟢 AVAILABLE (Active)"
                 }
             } catch (e: Exception) {
-                tvKeysStatus.text = "Clés Twelve Data : 🟢 AVAILABLE (Active)"
+                binding.tvKeysStatus.text = "Clés Twelve Data : 🟢 AVAILABLE (Active)"
             }
         }
     }
 
-    private fun clearCache(view: View) {
-        val btn = view.findViewById<Button>(R.id.btnClearCache) ?: return
-        btn.isEnabled = false
+    private fun clearCache() {
+        binding.btnClearCache.isEnabled = false
 
         lifecycleScope.launch {
             try {
@@ -117,8 +151,13 @@ class AdminControlFragment : Fragment() {
                     Toast.LENGTH_SHORT
                 ).show()
             } finally {
-                btn.isEnabled = true
+                binding.btnClearCache.isEnabled = true
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
