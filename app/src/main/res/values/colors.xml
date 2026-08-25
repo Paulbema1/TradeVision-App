@@ -15,8 +15,7 @@
     <color name="text_main">#FFFFFF</color>
     <color name="text_secondary">#94A3B8</color>
 
-    <!-- Compatibilité avec styles.xml -->
-    <color name="colorPrimary">#3B82F6</color>
-    <color name="colorPrimaryDark">#2563EB</color>
-    <color name="colorAccent">#3B82F6</color>
+    <!-- Couleurs de base -->
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
 </resources>
