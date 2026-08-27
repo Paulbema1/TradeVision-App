@@ -10,34 +10,52 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    fun getApiService(context: Context): ApiService {
-        val sessionManager = SessionManager(context)
+    @Volatile
+    private var retrofit: Retrofit? = null
 
-        val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+    fun getApiService(context: Context): ApiService {
+        val appContext = context.applicationContext
+
+        if (retrofit == null) {
+            synchronized(this) {
+                if (retrofit == null) {
+                    val loggingInterceptor = HttpLoggingInterceptor().apply {
+                        level = if (com.tradevision.ai.BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
+                    }
+
+                    try {
+                        // redact Authorization header from logs when supported
+                        loggingInterceptor.redactHeader("Authorization")
+                    } catch (_: Throwable) {
+                        // ignore if method not available on older versions
+                    }
+
+                    val okHttpClient = OkHttpClient.Builder()
+                        .connectTimeout(30, TimeUnit.SECONDS)
+                        .readTimeout(30, TimeUnit.SECONDS)
+                        .writeTimeout(30, TimeUnit.SECONDS)
+                        .addInterceptor { chain ->
+                            // Retrieve token dynamically from secure SessionManager
+                            val sessionManager = SessionManager(appContext)
+                            val requestBuilder = chain.request().newBuilder()
+                            val token = sessionManager.getToken()
+                            if (!token.isNullOrEmpty()) {
+                                requestBuilder.addHeader("Authorization", "Bearer $token")
+                            }
+                            chain.proceed(requestBuilder.build())
+                        }
+                        .addInterceptor(loggingInterceptor)
+                        .build()
+
+                    retrofit = Retrofit.Builder()
+                        .baseUrl(Constants.BASE_URL)
+                        .client(okHttpClient)
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build()
+                }
+            }
         }
 
-        val okHttpClient = OkHttpClient.Builder()
-            .connectTimeout(90, TimeUnit.SECONDS)
-            .readTimeout(90, TimeUnit.SECONDS)
-            .writeTimeout(90, TimeUnit.SECONDS)
-            .addInterceptor(loggingInterceptor)
-            .addInterceptor { chain ->
-                val requestBuilder = chain.request().newBuilder()
-                val token = sessionManager.getToken()
-                if (!token.isNullOrEmpty()) {
-                    requestBuilder.addHeader("Authorization", "Bearer $token")
-                }
-                chain.proceed(requestBuilder.build())
-            }
-            .build()
-
-        val retrofit = Retrofit.Builder()
-            .baseUrl(Constants.BASE_URL)
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
-        return retrofit.create(ApiService::class.java)
+        return retrofit!!.create(ApiService::class.java)
     }
 }
