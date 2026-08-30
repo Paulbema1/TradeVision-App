@@ -28,6 +28,7 @@ data class UserResponse(
 )
 
 data class SignalResponse(
+    @SerializedName("signal_id") val signalId: String?,
     @SerializedName("symbol") val symbol: String,
     @SerializedName("action") val action: String,
     @SerializedName("confidence") val confidence: Int,
@@ -50,6 +51,7 @@ data class SignalResponse(
 
 data class SignalHistoryItem(
     @SerializedName("id") val id: Int,
+    @SerializedName("signal_id") val signalId: String?,
     @SerializedName("symbol") val symbol: String,
     @SerializedName("action") val action: String,
     @SerializedName("score") val score: Int,

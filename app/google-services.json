@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "553666169290",
+    "project_id": "tradevision-ai-e42a8",
+    "storage_bucket": "tradevision-ai-e42a8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:553666169290:android:848eb907ff7cf10666e733",
+        "android_client_info": {
+          "package_name": "com.tradevision.ai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAieV9mfe1bYU8SundhGhZsSrPgpdTGOhM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

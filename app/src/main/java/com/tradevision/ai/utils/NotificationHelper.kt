@@ -2,10 +2,14 @@ package com.tradevision.ai.utils
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.tradevision.ai.R
+import com.tradevision.ai.receivers.CopyLevelsReceiver
+import com.tradevision.ai.ui.main.MainActivity
 import java.util.Locale
 
 object PriceFormatter {
@@ -65,6 +69,34 @@ object NotificationHelper {
         val tp1Str = PriceFormatter.format(tp1, symbol)
 
         val body = "Entrée: $entryStr | SL: $slStr | TP1: $tp1Str"
+        val notifId = signalId?.hashCode() ?: ((System.currentTimeMillis() / 1000L).toInt())
+
+        // Action "Ouvrir" : ouvre l'app sur l'écran des signaux.
+        val openIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val openPendingIntent = PendingIntent.getActivity(
+            context,
+            notifId,
+            openIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // Action "Copier les niveaux" : copie Entry/SL/TP1 dans le presse-papiers
+        // sans ouvrir l'app (exigence "Copy ALL LEVELS button").
+        val copyIntent = Intent(context, CopyLevelsReceiver::class.java).apply {
+            putExtra(CopyLevelsReceiver.EXTRA_SYMBOL, symbol)
+            putExtra(CopyLevelsReceiver.EXTRA_ACTION, action)
+            putExtra(CopyLevelsReceiver.EXTRA_ENTRY, entryStr)
+            putExtra(CopyLevelsReceiver.EXTRA_SL, slStr)
+            putExtra(CopyLevelsReceiver.EXTRA_TP1, tp1Str)
+        }
+        val copyPendingIntent = PendingIntent.getBroadcast(
+            context,
+            notifId + 1,
+            copyIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.tradevision_logo)
@@ -73,9 +105,10 @@ object NotificationHelper {
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setAutoCancel(true)
+            .setContentIntent(openPendingIntent)
+            .addAction(0, "Ouvrir le signal", openPendingIntent)
+            .addAction(0, "Copier les niveaux", copyPendingIntent)
 
-        // Use signalId-based notification id if present to avoid duplicates; fall back to timestamp
-        val notifId = signalId?.hashCode() ?: ((System.currentTimeMillis() / 1000L).toInt())
         notificationManager.notify(notifId, builder.build())
     }
 }

@@ -1,8 +1,11 @@
 package com.tradevision.ai.utils
 
+import com.tradevision.ai.BuildConfig
+
 object Constants {
-    // URL de ton serveur Render en ligne
-    const val BASE_URL = "https://trading-backend-23od.onrender.com/api/v2/"
+    // URL backend désormais configurable par variante de build (voir app/build.gradle.kts,
+    // buildConfigField BASE_URL) plutôt que codée en dur — audit F-02.
+    val BASE_URL: String = BuildConfig.BASE_URL
 
     val SUPPORTED_ASSETS = listOf(
         "EUR/USD",

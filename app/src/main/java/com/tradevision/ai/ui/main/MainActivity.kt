@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,7 +14,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.firebase.messaging.FirebaseMessaging
 import com.tradevision.ai.R
 import com.tradevision.ai.data.model.FcmTokenRequest
 import com.tradevision.ai.data.network.ApiClient
@@ -25,21 +26,27 @@ import com.tradevision.ai.ui.auth.LoginActivity
 import com.tradevision.ai.ui.user.HistoryFragment
 import com.tradevision.ai.ui.user.ProfileFragment
 import com.tradevision.ai.ui.user.SignalFragment
-import com.tradevision.ai.utils.Constants
-import com.tradevision.ai.utils.NotificationHelper
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
+/**
+ * NOTE (corrigé v9.1.0) :
+ * Cette Activity ne fait plus de polling en arrière-plan (l'ancien
+ * startBackgroundMonitor() interrogeait /signals/analyze toutes les 15s pour
+ * chaque actif, ce qui dupliquait l'Auto-Scan serveur et violait l'exigence
+ * "pas de polling 15s"). Les notifications proviennent désormais uniquement
+ * de FCM (voir FCMService.kt) ; le rafraîchissement d'écran (30s max) reste
+ * géré localement par SignalFragment.
+ */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
     private var userRole = "USER"
-    private val lastNotifiedKeys = mutableSetOf<String>()
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
-        if (isGranted) registerDummyFcmToken()
+        if (isGranted) registerRealFcmToken()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,44 +61,6 @@ class MainActivity : AppCompatActivity() {
 
         checkNotificationPermission()
         loadFragment(SignalFragment())
-        startBackgroundMonitor()
-    }
-
-    private fun startBackgroundMonitor() {
-        lifecycleScope.launch {
-            while (true) {
-                try {
-                    val api = ApiClient.getApiService(this@MainActivity)
-                    val mainTf = sessionManager.getMainTf()
-                    val confirmTf = sessionManager.getConfirmTf()
-
-                    Constants.SUPPORTED_ASSETS.forEach { symbol ->
-                        val res = api.analyzeAsset(symbol, mainTf = mainTf, confirmTf = confirmTf)
-                        if (res.isSuccessful && res.body() != null) {
-                            val sig = res.body()!!
-                            if (sig.action != "WAIT" && sig.confidence >= 70) {
-                                val key = "${sig.symbol}_${sig.action}_${sig.entryPrice}"
-                                if (!lastNotifiedKeys.contains(key)) {
-                                    lastNotifiedKeys.add(key)
-                                    NotificationHelper.showSignalNotification(
-                                        context = this@MainActivity,
-                                        symbol = sig.symbol,
-                                        action = sig.action,
-                                        confidence = sig.confidence,
-                                        entry = sig.entryPrice,
-                                        sl = sig.stopLoss,
-                                        tp1 = sig.takeProfit1
-                                    )
-                                }
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    // Ignore
-                }
-                delay(15000) // Vérification dynamique toutes les 15 secondes en arrière-plan !
-            }
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -126,23 +95,28 @@ class MainActivity : AppCompatActivity() {
     private fun checkNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-                registerDummyFcmToken()
+                registerRealFcmToken()
             } else {
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         } else {
-            registerDummyFcmToken()
+            registerRealFcmToken()
         }
     }
 
-    private fun registerDummyFcmToken() {
+    /**
+     * Récupère le VRAI token FCM auprès de Firebase et l'enregistre côté backend.
+     * Remplace l'ancien registerDummyFcmToken() qui envoyait un identifiant factice
+     * ("android_device_" + username) et cassait silencieusement les notifications push.
+     */
+    private fun registerRealFcmToken() {
         lifecycleScope.launch {
             try {
+                val token = FirebaseMessaging.getInstance().token.await()
                 val api = ApiClient.getApiService(this@MainActivity)
-                val deviceToken = "android_device_" + sessionManager.getUsername()
-                api.updateFcmToken(FcmTokenRequest(deviceToken))
+                api.updateFcmToken(FcmTokenRequest(token))
             } catch (e: Exception) {
-                // Ignore
+                Log.w("MainActivity", "Échec de l'enregistrement du token FCM : ${e.message}")
             }
         }
     }

@@ -6,13 +6,13 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@drawable/tradevision_logo"
         android:roundIcon="@drawable/tradevision_logo"
         android:label="TradeVision AI"
         android:supportsRtl="true"
         android:theme="@style/Theme.TradeVisionAI"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="false">
 
         <activity
             android:name=".ui.auth.LoginActivity"
@@ -25,6 +25,22 @@
 
         <activity
             android:name=".ui.main.MainActivity"
+            android:exported="false" />
+
+        <!-- Requis pour que Firebase route les messages FCM vers onMessageReceived().
+             Absent du manifest original : les notifications push ne pouvaient jamais
+             être reçues, même avec un token valide. -->
+        <service
+            android:name=".FCMService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Action "Copier les niveaux" déclenchée depuis la notification de signal -->
+        <receiver
+            android:name=".receivers.CopyLevelsReceiver"
             android:exported="false" />
     </application>
 </manifest>
