@@ -121,7 +121,7 @@ class SignalFragment : Fragment() {
         val mainTf = sessionManager.getMainTf()
         val confirmTf = sessionManager.getConfirmTf()
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val api = ApiClient.getApiService(requireContext())
                 val response = api.analyzeAsset(symbol, mainTf = mainTf, confirmTf = confirmTf)
