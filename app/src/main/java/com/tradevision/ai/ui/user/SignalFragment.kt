@@ -31,7 +31,6 @@ class SignalFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var sessionManager: SessionManager
     private var selectedAsset = "EUR/USD"
-    private var lastNotifiedSignal = ""
     private var autoRefreshJob: Job? = null
 
     override fun onCreateView(
@@ -158,9 +157,13 @@ class SignalFragment : Fragment() {
                         binding.tvTP3.text = String.format(Locale.US, formatStr, sig.takeProfit3 ?: 0.0)
                         binding.tvRR.text = "Risk / Reward : 1 : ${sig.riskReward ?: 2.5}"
 
-                        val signalKey = "${sig.symbol}_${sig.action}_${sig.entryPrice}"
-                        if (signalKey != lastNotifiedSignal && sig.confidence >= 70) {
-                            lastNotifiedSignal = signalKey
+                        // Deduplication PERSISTANTE (survit a la destruction du fragment,
+                        // contrairement a une simple variable en memoire). Utilise signal_id
+                        // quand disponible (backend v9.1.0+), sinon repli sur une empreinte
+                        // locale pour rester fonctionnel meme sans signal_id.
+                        val dedupKey = sig.signalId ?: "${sig.symbol}_${sig.action}_${sig.entryPrice}"
+                        if (!sessionManager.hasSeenSignal(dedupKey) && sig.confidence >= 70) {
+                            sessionManager.markSignalSeen(dedupKey)
                             NotificationHelper.showSignalNotification(
                                 context = requireContext(),
                                 symbol = sig.symbol,
@@ -168,7 +171,8 @@ class SignalFragment : Fragment() {
                                 confidence = sig.confidence,
                                 entry = sig.entryPrice,
                                 sl = sig.stopLoss,
-                                tp1 = sig.takeProfit1
+                                tp1 = sig.takeProfit1,
+                                signalId = sig.signalId
                             )
                         }
                     } else {
@@ -225,3 +229,4 @@ class SignalFragment : Fragment() {
         _binding = null
     }
 }
+
