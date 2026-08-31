@@ -46,6 +46,7 @@ data class SignalResponse(
     @SerializedName("news_summary") val newsSummary: String?,
     @SerializedName("data_quality") val dataQuality: String,
     @SerializedName("ai_confirmed") val aiConfirmed: Boolean?,
+    @SerializedName("score_breakdown") val scoreBreakdown: Map<String, Int>?,
     @SerializedName("reasons") val reasons: String?
 )
 
@@ -125,3 +126,4 @@ data class BacktestResponse(
     @SerializedName("metrics") val metrics: BacktestMetrics?,
     @SerializedName("trades") val trades: List<BacktestTrade>?
 )
+

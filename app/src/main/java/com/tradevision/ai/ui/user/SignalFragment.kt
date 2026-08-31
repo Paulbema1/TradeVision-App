@@ -180,6 +180,7 @@ class SignalFragment : Fragment() {
                     }
 
                     binding.tvReasons.text = sig.reasons ?: "Analyse terminée avec score déterministe."
+                    renderFactorBadges(sig)
 
                 } else {
                     binding.tvAction.text = "ERROR"
@@ -189,6 +190,105 @@ class SignalFragment : Fragment() {
                 binding.tvAction.text = "OFFLINE"
                 binding.tvReasons.text = "Vérifiez votre connexion Internet : ${e.message}"
             }
+        }
+    }
+
+    /**
+     * Génère dynamiquement les badges de statut de la section "WHY THIS SIGNAL?"
+     * à partir de score_breakdown (déjà calculé par le moteur déterministe) et
+     * de ai_confirmed. Barèmes réels par catégorie (cahier des charges v9.1.0) :
+     * technical=25, smc=30, mtf=20 (tout ou rien), momentum=5, news=5, calendar=5.
+     * N'invente aucune donnée : direction (BULLISH/BEARISH) déduite de sig.action
+     * uniquement quand le score de la catégorie est fort.
+     */
+    private fun renderFactorBadges(sig: com.tradevision.ai.data.model.SignalResponse) {
+        binding.factorsContainer.removeAllViews()
+        val breakdown = sig.scoreBreakdown ?: emptyMap()
+        val isBuy = sig.action == "BUY"
+
+        fun addBadge(label: String, status: String, bgColor: Int, textColor: Int) {
+            val row = LinearLayout(requireContext()).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                val p = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { setMargins(0, 0, 0, 8) }
+                layoutParams = p
+            }
+            val labelView = android.widget.TextView(requireContext()).apply {
+                text = label
+                setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary))
+                textSize = 13f
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            val badgeView = android.widget.TextView(requireContext()).apply {
+                text = status
+                setTextColor(textColor)
+                textSize = 11f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                setPadding(20, 8, 20, 8)
+                background = ContextCompat.getDrawable(requireContext(), R.drawable.bg_status_badge)?.mutate()?.apply {
+                    setTint(bgColor)
+                }
+            }
+            row.addView(labelView)
+            row.addView(badgeView)
+            binding.factorsContainer.addView(row)
+        }
+
+        fun highLowBadge(score: Int, high: Int, mid: Int, highLabel: String, midLabel: String, lowLabel: String): Triple<String, Int, Int> {
+            val green = ContextCompat.getColor(requireContext(), R.color.badge_green_bg)
+            val greenTxt = ContextCompat.getColor(requireContext(), R.color.badge_green_text)
+            val orange = ContextCompat.getColor(requireContext(), R.color.badge_orange_bg)
+            val orangeTxt = ContextCompat.getColor(requireContext(), R.color.badge_orange_text)
+            val red = ContextCompat.getColor(requireContext(), R.color.badge_red_bg)
+            val redTxt = ContextCompat.getColor(requireContext(), R.color.badge_red_text)
+            return when {
+                score >= high -> Triple(highLabel, green, greenTxt)
+                score >= mid -> Triple(midLabel, orange, orangeTxt)
+                else -> Triple(lowLabel, red, redTxt)
+            }
+        }
+
+        val direction = if (isBuy) "BULLISH" else "BEARISH"
+
+        breakdown["technical"]?.let { score ->
+            val (label, bg, txt) = highLowBadge(score, 18, 10, direction, "NEUTRAL", "CAUTION")
+            addBadge("Technical Analysis", label, bg, txt)
+        }
+        breakdown["smc"]?.let { score ->
+            val (label, bg, txt) = highLowBadge(score, 20, 8, direction, "NEUTRAL", "WEAK")
+            addBadge("SMC", label, bg, txt)
+        }
+        breakdown["momentum"]?.let { score ->
+            val (label, bg, txt) = highLowBadge(score, 5, 3, direction, "NEUTRAL", "WEAK")
+            addBadge("Momentum", label, bg, txt)
+        }
+        breakdown["mtf"]?.let { score ->
+            val (label, bg, txt) = highLowBadge(score, 20, 0, "CONFIRMED", "NEUTRAL", "NEUTRAL")
+            addBadge("MTF", label, bg, txt)
+        }
+        breakdown["news"]?.let { score ->
+            val (label, bg, txt) = highLowBadge(score, 5, 1, "GOOD", "CAUTION", "RISK")
+            addBadge("News", label, bg, txt)
+        }
+        breakdown["calendar"]?.let { score ->
+            val (label, bg, txt) = highLowBadge(score, 5, 2, "CLEAR", "CAUTION", "HIGH RISK")
+            addBadge("Economic Calendar", label, bg, txt)
+        }
+        when (sig.aiConfirmed) {
+            true -> addBadge(
+                "AI Confirmation", "CONFIRMED",
+                ContextCompat.getColor(requireContext(), R.color.badge_green_bg),
+                ContextCompat.getColor(requireContext(), R.color.badge_green_text)
+            )
+            false -> addBadge(
+                "AI Confirmation", "REJECTED",
+                ContextCompat.getColor(requireContext(), R.color.badge_red_bg),
+                ContextCompat.getColor(requireContext(), R.color.badge_red_text)
+            )
+            null -> { /* Pas d'évaluation IA (ex: WAIT) -> pas de badge affiché */ }
         }
     }
 

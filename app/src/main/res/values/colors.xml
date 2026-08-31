@@ -15,6 +15,14 @@
     <color name="signal_sell">#EF4444</color>
     <color name="signal_wait">#F59E0B</color>
 
+    <!-- Badges de statut (écran Signal - "WHY THIS SIGNAL?") -->
+    <color name="badge_green_bg">#1E4620</color>
+    <color name="badge_green_text">#4ADE80</color>
+    <color name="badge_orange_bg">#4A3418</color>
+    <color name="badge_orange_text">#FBBF24</color>
+    <color name="badge_red_bg">#4A1D1D</color>
+    <color name="badge_red_text">#F87171</color>
+
     <!-- Admin & Textes -->
     <color name="admin_accent">#3B82F6</color>
     <color name="text_main">#FFFFFF</color>
@@ -24,3 +32,4 @@
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
 </resources>
+

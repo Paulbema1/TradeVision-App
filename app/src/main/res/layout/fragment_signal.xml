@@ -53,6 +53,7 @@
                 android:orientation="vertical"
                 android:padding="20dp">
 
+                <!-- 1. ACTIF -->
                 <TextView
                     android:id="@+id/tvAsset"
                     android:layout_width="wrap_content"
@@ -62,6 +63,7 @@
                     android:textSize="22sp"
                     android:textStyle="bold" />
 
+                <!-- 2. SIGNAL -->
                 <TextView
                     android:id="@+id/tvAction"
                     android:layout_width="wrap_content"
@@ -74,6 +76,7 @@
                     android:textSize="32sp"
                     android:textStyle="bold" />
 
+                <!-- CONFIANCE ET SCORE -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -104,6 +107,7 @@
                         android:textSize="14sp" />
                 </LinearLayout>
 
+                <!-- TIMEFRAMES -->
                 <TextView
                     android:id="@+id/tvTimeframes"
                     android:layout_width="wrap_content"
@@ -120,12 +124,14 @@
                     android:layout_marginVertical="16dp"
                     android:background="@color/bg_border" />
 
+                <!-- 3. NIVEAUX DU TRADE AVEC BOUTONS DE COPIE INDIVIDUELLE 🧾 -->
                 <LinearLayout
                     android:id="@+id/levelsContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
+                    <!-- ENTRY -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -155,6 +161,7 @@
                             app:tint="@color/text_secondary" />
                     </LinearLayout>
 
+                    <!-- STOP LOSS -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -185,6 +192,7 @@
                             app:tint="@color/signal_sell" />
                     </LinearLayout>
 
+                    <!-- TAKE PROFIT 1 -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -215,6 +223,7 @@
                             app:tint="@color/signal_buy" />
                     </LinearLayout>
 
+                    <!-- TAKE PROFIT 2 -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -245,6 +254,7 @@
                             app:tint="@color/signal_buy" />
                     </LinearLayout>
 
+                    <!-- TAKE PROFIT 3 -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -285,6 +295,7 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp" />
 
+                    <!-- BOUTON COPIE GLOBALE -->
                     <Button
                         android:id="@+id/btnCopy"
                         android:layout_width="match_parent"
@@ -302,19 +313,29 @@
                     android:layout_marginVertical="16dp"
                     android:background="@color/bg_border" />
 
+                <!-- WHY THIS SIGNAL? — badges dynamiques par facteur d'analyse -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="start"
                     android:text="WHY THIS SIGNAL?"
                     android:textColor="@color/text_main"
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
+                <LinearLayout
+                    android:id="@+id/factorsContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="vertical" />
+
+                <!-- EXPLICATION TEXTUELLE (raison complète du moteur) -->
                 <TextView
                     android:id="@+id/tvReasons"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="14dp"
                     android:background="@color/bg_main"
                     android:padding="12dp"
                     android:textColor="@color/text_secondary"
@@ -325,3 +346,4 @@
 
     </LinearLayout>
 </ScrollView>
+
