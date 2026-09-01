@@ -48,7 +48,14 @@ interface ApiService {
         @Query("symbol") symbol: String,
         @Query("main_tf") mainTf: String = "1h",
         @Query("confirm_tf") confirmTf: String = "4h"
-    ): Response<BacktestResponse>
+    ): Response<BacktestStartResponse>
+
+    @GET("admin/backtest-result")
+    suspend fun getBacktestResult(
+        @Query("symbol") symbol: String,
+        @Query("main_tf") mainTf: String = "1h",
+        @Query("confirm_tf") confirmTf: String = "4h"
+    ): Response<BacktestJobStatus>
 
     @POST("admin/download-historical-data")
     suspend fun downloadHistoricalData(): Response<MessageResponse>

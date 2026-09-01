@@ -128,3 +128,16 @@ data class BacktestResponse(
     @SerializedName("error") val error: String?
 )
 
+data class BacktestStartResponse(
+    @SerializedName("status") val status: String,
+    @SerializedName("symbol") val symbol: String,
+    @SerializedName("main_tf") val mainTf: String,
+    @SerializedName("confirm_tf") val confirmTf: String,
+    @SerializedName("message") val message: String?
+)
+
+data class BacktestJobStatus(
+    @SerializedName("status") val status: String,
+    @SerializedName("result") val result: BacktestResponse?
+)
+

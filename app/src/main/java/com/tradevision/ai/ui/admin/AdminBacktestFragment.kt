@@ -172,68 +172,62 @@ class AdminBacktestFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                appendLog("📡 Chargement du dataset local (Parquet) sur Render...")
-                delay(200)
-
                 val api = ApiClient.getApiService(requireContext())
-                val response = api.runBacktest(symbol = selectedAsset, mainTf = mainTf, confirmTf = confirmTf)
 
-                if (response.isSuccessful && response.body() != null) {
-                    val body = response.body()!!
+                appendLog("📡 Démarrage du calcul en arrière-plan sur le serveur...")
+                val startResponse = api.runBacktest(symbol = selectedAsset, mainTf = mainTf, confirmTf = confirmTf)
 
-                    // Le backend peut renvoyer un HTTP 200 avec un champ "error"
-                    // (ex: données historiques Parquet manquantes) plutôt qu'une
-                    // exception HTTP. Il faut l'afficher clairement, sinon l'app
-                    // semble "ne rien faire" silencieusement.
-                    if (!body.error.isNullOrBlank()) {
-                        appendLog("⚠️ ${body.error}")
-                        appendLog("💡 Astuce : utilisez d'abord le bouton \"Télécharger l'historique\" ci-dessus.")
-                        Toast.makeText(requireContext(), "Backtest impossible : données manquantes.", Toast.LENGTH_LONG).show()
-                        return@launch
-                    }
-
-                    val m = body.metrics
-
-                    if (m != null) {
-                        appendLog("📊 Analyse des résultats audités...")
-
-                        val displayMainTf = (body.mainTf ?: mainTf).uppercase()
-                        val displayPeriod = body.period ?: "N/A"
-                        binding.tvBacktestTfInfo.text = "TF Principal : $displayMainTf   •   Confirmation : ${confirmTf.uppercase()}"
-                        binding.tvBacktestPeriodInfo.text = "Période simulée : $displayPeriod"
-
-                        binding.tvWinRate.text = "WIN RATE : ${m.winRatePct}%"
-                        binding.tvProfitFactor.text = "Profit Factor : ${m.profitFactor}   |   Net : +${m.netProfitPct}%"
-                        binding.tvDrawdown.text = "Max Drawdown : -${m.maxDrawdownPct}%"
-                        binding.tvTradesStats.text = "Clôturés: ${m.closedTrades} (Win: ${m.winningTrades}, Loss: ${m.losingTrades}) | En Cours: ${m.openTrades}"
-
-                        val trades = body.trades
-                        if (!trades.isNullOrEmpty()) {
-                            appendLog("🎯 Total Trades : ${trades.size} (Détails ci-dessous)")
-                            binding.tvTradesList.text = trades.take(25).joinToString("\n") { t ->
-                                val actionEmoji = if (t.action == "BUY") "🟢 BUY" else "🔴 SELL"
-                                val resEmoji = when (t.result) {
-                                    "WIN" -> "✅ WIN (+${t.pips} pips)"
-                                    "LOSS" -> "❌ LOSS (${t.pips} pips)"
-                                    else -> "⏳ OPEN (Trade en cours)"
-                                }
-                                "$actionEmoji @ ${t.entryPrice} ➔ $resEmoji [${t.entryTime}]"
-                            }
-                        } else {
-                            binding.tvTradesList.text = "Aucun trade exécuté sur cette période."
-                        }
-
-                        appendLog("✅ Audit terminé avec succès !")
-                        binding.cardResults.visibility = View.VISIBLE
-                        Toast.makeText(requireContext(), "✅ Audit Backtest $selectedAsset terminé !", Toast.LENGTH_SHORT).show()
-                    } else {
-                        appendLog("⚠️ Réponse du serveur sans résultats exploitables.")
-                        Toast.makeText(requireContext(), "Aucun résultat exploitable.", Toast.LENGTH_SHORT).show()
-                    }
-                } else {
-                    appendLog("❌ Erreur serveur : ${response.code()}")
-                    Toast.makeText(requireContext(), "Erreur serveur : ${response.code()}", Toast.LENGTH_SHORT).show()
+                if (!startResponse.isSuccessful) {
+                    appendLog("❌ Erreur serveur au démarrage : ${startResponse.code()}")
+                    Toast.makeText(requireContext(), "Erreur serveur : ${startResponse.code()}", Toast.LENGTH_SHORT).show()
+                    return@launch
                 }
+
+                // Le backtest sur 5000 bougies dépasse largement un simple aller-retour
+                // HTTP (calcul du scoring déterministe complet à chaque bougie). On
+                // interroge donc le résultat toutes les 5s (polling), sans jamais
+                // laisser une requête HTTP unique attendre plusieurs minutes.
+                appendLog("⏳ Calcul en cours côté serveur (peut prendre plusieurs minutes)...")
+
+                var attempts = 0
+                val maxAttempts = 90 // 90 x 5s = 7.5 min max avant abandon
+
+                while (attempts < maxAttempts) {
+                    delay(5000)
+                    attempts++
+
+                    val statusResponse = api.getBacktestResult(symbol = selectedAsset, mainTf = mainTf, confirmTf = confirmTf)
+                    if (!statusResponse.isSuccessful || statusResponse.body() == null) {
+                        appendLog("❌ Erreur lors de la vérification du statut : ${statusResponse.code()}")
+                        continue
+                    }
+
+                    val job = statusResponse.body()!!
+
+                    when (job.status) {
+                        "running" -> {
+                            appendLog("⏳ Toujours en cours... (${attempts * 5}s écoulées)")
+                        }
+                        "done" -> {
+                            appendLog("📊 Calcul terminé, analyse des résultats...")
+                            renderBacktestResult(job.result, mainTf, confirmTf)
+                            return@launch
+                        }
+                        "error" -> {
+                            val errMsg = job.result?.error ?: "Erreur inconnue"
+                            appendLog("❌ Erreur pendant le backtest : $errMsg")
+                            Toast.makeText(requireContext(), "Erreur backtest : $errMsg", Toast.LENGTH_LONG).show()
+                            return@launch
+                        }
+                        else -> {
+                            appendLog("⚠️ Statut inattendu : ${job.status}")
+                        }
+                    }
+                }
+
+                appendLog("⏱️ Délai maximum dépassé (7,5 min). Réessayez plus tard.")
+                Toast.makeText(requireContext(), "Le backtest prend trop de temps, réessayez plus tard.", Toast.LENGTH_LONG).show()
+
             } catch (e: Exception) {
                 appendLog("❌ Erreur : ${e.message}")
                 Toast.makeText(requireContext(), "Erreur : ${e.message}", Toast.LENGTH_LONG).show()
@@ -245,6 +239,57 @@ class AdminBacktestFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun renderBacktestResult(body: com.tradevision.ai.data.model.BacktestResponse?, mainTf: String, confirmTf: String) {
+        if (body == null) {
+            appendLog("⚠️ Réponse vide du serveur.")
+            return
+        }
+
+        if (!body.error.isNullOrBlank()) {
+            appendLog("⚠️ ${body.error}")
+            appendLog("💡 Astuce : utilisez d'abord le bouton \"Télécharger l'historique\" ci-dessus.")
+            Toast.makeText(requireContext(), "Backtest impossible : données manquantes.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val m = body.metrics
+        if (m == null) {
+            appendLog("⚠️ Réponse du serveur sans résultats exploitables.")
+            Toast.makeText(requireContext(), "Aucun résultat exploitable.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val displayMainTf = (body.mainTf ?: mainTf).uppercase()
+        val displayPeriod = body.period ?: "N/A"
+        binding.tvBacktestTfInfo.text = "TF Principal : $displayMainTf   •   Confirmation : ${confirmTf.uppercase()}"
+        binding.tvBacktestPeriodInfo.text = "Période simulée : $displayPeriod"
+
+        binding.tvWinRate.text = "WIN RATE : ${m.winRatePct}%"
+        binding.tvProfitFactor.text = "Profit Factor : ${m.profitFactor}   |   Net : +${m.netProfitPct}%"
+        binding.tvDrawdown.text = "Max Drawdown : -${m.maxDrawdownPct}%"
+        binding.tvTradesStats.text = "Clôturés: ${m.closedTrades} (Win: ${m.winningTrades}, Loss: ${m.losingTrades}) | En Cours: ${m.openTrades}"
+
+        val trades = body.trades
+        if (!trades.isNullOrEmpty()) {
+            appendLog("🎯 Total Trades : ${trades.size} (Détails ci-dessous)")
+            binding.tvTradesList.text = trades.take(25).joinToString("\n") { t ->
+                val actionEmoji = if (t.action == "BUY") "🟢 BUY" else "🔴 SELL"
+                val resEmoji = when (t.result) {
+                    "WIN" -> "✅ WIN (+${t.pips} pips)"
+                    "LOSS" -> "❌ LOSS (${t.pips} pips)"
+                    else -> "⏳ OPEN (Trade en cours)"
+                }
+                "$actionEmoji @ ${t.entryPrice} ➔ $resEmoji [${t.entryTime}]"
+            }
+        } else {
+            binding.tvTradesList.text = "Aucun trade exécuté sur cette période."
+        }
+
+        appendLog("✅ Audit terminé avec succès !")
+        binding.cardResults.visibility = View.VISIBLE
+        Toast.makeText(requireContext(), "✅ Audit Backtest terminé !", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroyView() {
