@@ -48,6 +48,70 @@ class AdminBacktestFragment : Fragment() {
 
         setupAssetChips()
         binding.btnRunBacktest.setOnClickListener { runBacktest() }
+        insertDownloadHistoricalDataButton()
+    }
+
+    /**
+     * Ajoute le bouton "Télécharger l'historique" AU-DESSUS du bouton
+     * "Lancer le backtest" existant, sans dépendre du layout XML (inséré
+     * directement dans le parent de btnRunBacktest, quel qu'il soit).
+     * Prérequis : le backtest ne peut fonctionner que si des données
+     * historiques Parquet locales existent déjà (voir historical_data.py).
+     */
+    private fun insertDownloadHistoricalDataButton() {
+        val parent = binding.btnRunBacktest.parent as? ViewGroup ?: return
+        val index = parent.indexOfChild(binding.btnRunBacktest)
+
+        val downloadButton = Button(requireContext()).apply {
+            text = "📥 TÉLÉCHARGER L'HISTORIQUE (une fois)"
+            textSize = 12f
+            setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.bg_card))
+            setTextColor(ContextCompat.getColor(requireContext(), R.color.admin_accent))
+            val params = when (val lp = binding.btnRunBacktest.layoutParams) {
+                is LinearLayout.LayoutParams -> LinearLayout.LayoutParams(lp).apply {
+                    topMargin = 12
+                    bottomMargin = 12
+                }
+                else -> ViewGroup.MarginLayoutParams(lp)
+            }
+            layoutParams = params
+            setOnClickListener { downloadHistoricalData(this) }
+        }
+
+        parent.addView(downloadButton, index)
+    }
+
+    private fun downloadHistoricalData(button: Button) {
+        button.isEnabled = false
+        button.text = "⏳ Démarrage du téléchargement..."
+
+        binding.cardLogs.visibility = View.VISIBLE
+        logBuilder.clear()
+        appendLog("📥 Demande de téléchargement des données historiques (4 actifs x 4 timeframes)...")
+        appendLog("⏱️ Cette opération tourne en arrière-plan côté serveur (~2-3 min). Consultez les logs Render pour le détail.")
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val api = ApiClient.getApiService(requireContext())
+                val response = api.downloadHistoricalData()
+
+                if (response.isSuccessful && response.body() != null) {
+                    appendLog("✅ ${response.body()!!.message}")
+                    Toast.makeText(requireContext(), "Téléchargement démarré, voir les logs.", Toast.LENGTH_LONG).show()
+                } else {
+                    appendLog("❌ Erreur serveur : ${response.code()}")
+                    Toast.makeText(requireContext(), "Erreur serveur : ${response.code()}", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                appendLog("❌ Erreur : ${e.message}")
+                Toast.makeText(requireContext(), "Erreur : ${e.message}", Toast.LENGTH_LONG).show()
+            } finally {
+                if (_binding != null) {
+                    button.isEnabled = true
+                    button.text = "📥 TÉLÉCHARGER L'HISTORIQUE (une fois)"
+                }
+            }
+        }
     }
 
     private fun appendLog(text: String) {
@@ -108,7 +172,7 @@ class AdminBacktestFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                appendLog("📡 Chargement du dataset 6 Mois sur Render...")
+                appendLog("📡 Chargement du dataset local (Parquet) sur Render...")
                 delay(200)
 
                 val api = ApiClient.getApiService(requireContext())
@@ -116,13 +180,27 @@ class AdminBacktestFragment : Fragment() {
 
                 if (response.isSuccessful && response.body() != null) {
                     val body = response.body()!!
+
+                    // Le backend peut renvoyer un HTTP 200 avec un champ "error"
+                    // (ex: données historiques Parquet manquantes) plutôt qu'une
+                    // exception HTTP. Il faut l'afficher clairement, sinon l'app
+                    // semble "ne rien faire" silencieusement.
+                    if (!body.error.isNullOrBlank()) {
+                        appendLog("⚠️ ${body.error}")
+                        appendLog("💡 Astuce : utilisez d'abord le bouton \"Télécharger l'historique\" ci-dessus.")
+                        Toast.makeText(requireContext(), "Backtest impossible : données manquantes.", Toast.LENGTH_LONG).show()
+                        return@launch
+                    }
+
                     val m = body.metrics
 
                     if (m != null) {
                         appendLog("📊 Analyse des résultats audités...")
 
-                        binding.tvBacktestTfInfo.text = "TF Principal : ${body.mainTf.uppercase()}   •   Confirmation : ${confirmTf.uppercase()}"
-                        binding.tvBacktestPeriodInfo.text = "Période simulée (6 Mois) : ${body.period}"
+                        val displayMainTf = (body.mainTf ?: mainTf).uppercase()
+                        val displayPeriod = body.period ?: "N/A"
+                        binding.tvBacktestTfInfo.text = "TF Principal : $displayMainTf   •   Confirmation : ${confirmTf.uppercase()}"
+                        binding.tvBacktestPeriodInfo.text = "Période simulée : $displayPeriod"
 
                         binding.tvWinRate.text = "WIN RATE : ${m.winRatePct}%"
                         binding.tvProfitFactor.text = "Profit Factor : ${m.profitFactor}   |   Net : +${m.netProfitPct}%"
@@ -148,6 +226,9 @@ class AdminBacktestFragment : Fragment() {
                         appendLog("✅ Audit terminé avec succès !")
                         binding.cardResults.visibility = View.VISIBLE
                         Toast.makeText(requireContext(), "✅ Audit Backtest $selectedAsset terminé !", Toast.LENGTH_SHORT).show()
+                    } else {
+                        appendLog("⚠️ Réponse du serveur sans résultats exploitables.")
+                        Toast.makeText(requireContext(), "Aucun résultat exploitable.", Toast.LENGTH_SHORT).show()
                     }
                 } else {
                     appendLog("❌ Erreur serveur : ${response.code()}")
@@ -171,3 +252,4 @@ class AdminBacktestFragment : Fragment() {
         _binding = null
     }
 }
+

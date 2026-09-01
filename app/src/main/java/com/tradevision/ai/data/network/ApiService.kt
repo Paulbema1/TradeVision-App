@@ -49,4 +49,8 @@ interface ApiService {
         @Query("main_tf") mainTf: String = "1h",
         @Query("confirm_tf") confirmTf: String = "4h"
     ): Response<BacktestResponse>
+
+    @POST("admin/download-historical-data")
+    suspend fun downloadHistoricalData(): Response<MessageResponse>
 }
+

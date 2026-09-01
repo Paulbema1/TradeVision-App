@@ -120,10 +120,11 @@ data class BacktestTrade(
 )
 
 data class BacktestResponse(
-    @SerializedName("symbol") val symbol: String,
-    @SerializedName("main_tf") val mainTf: String,
-    @SerializedName("period") val period: String,
+    @SerializedName("symbol") val symbol: String?,
+    @SerializedName("main_tf") val mainTf: String?,
+    @SerializedName("period") val period: String?,
     @SerializedName("metrics") val metrics: BacktestMetrics?,
-    @SerializedName("trades") val trades: List<BacktestTrade>?
+    @SerializedName("trades") val trades: List<BacktestTrade>?,
+    @SerializedName("error") val error: String?
 )
 
