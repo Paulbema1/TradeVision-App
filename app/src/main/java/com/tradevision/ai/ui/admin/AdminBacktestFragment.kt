@@ -97,14 +97,14 @@ class AdminBacktestFragment : Fragment() {
 
                 if (response.isSuccessful && response.body() != null) {
                     appendLog("✅ ${response.body()!!.message}")
-                    Toast.makeText(requireContext(), "Téléchargement démarré, voir les logs.", Toast.LENGTH_LONG).show()
+                    safeToast("Téléchargement démarré, voir les logs.")
                 } else {
                     appendLog("❌ Erreur serveur : ${response.code()}")
-                    Toast.makeText(requireContext(), "Erreur serveur : ${response.code()}", Toast.LENGTH_SHORT).show()
+                    safeToast("Erreur serveur : ${response.code()}")
                 }
             } catch (e: Exception) {
                 appendLog("❌ Erreur : ${e.message}")
-                Toast.makeText(requireContext(), "Erreur : ${e.message}", Toast.LENGTH_LONG).show()
+                safeToast("Erreur : ${e.message}")
             } finally {
                 if (_binding != null) {
                     button.isEnabled = true
@@ -115,9 +115,19 @@ class AdminBacktestFragment : Fragment() {
     }
 
     private fun appendLog(text: String) {
+        // Le fragment peut avoir été quitté pendant un long calcul (backtest/téléchargement) ;
+        // sans cette garde, écrire dans binding après destruction de la vue crasherait l'app.
+        if (_binding == null) return
         val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
         logBuilder.append("[$time] $text\n")
         binding.tvConsoleLogs.text = logBuilder.toString()
+    }
+
+    private fun safeToast(message: String) {
+        // Idem : requireContext() plante si le fragment est détaché (ex: utilisateur
+        // a changé d'onglet pendant un calcul de plusieurs dizaines de secondes).
+        val ctx = context ?: return
+        Toast.makeText(ctx, message, Toast.LENGTH_LONG).show()
     }
 
     private fun setupAssetChips() {
@@ -149,7 +159,7 @@ class AdminBacktestFragment : Fragment() {
                 setOnClickListener {
                     selectedAsset = asset
                     setupAssetChips()
-                    Toast.makeText(requireContext(), "Actif : $asset", Toast.LENGTH_SHORT).show()
+                    safeToast("Actif : $asset")
                 }
             }
             binding.backtestAssetContainer.addView(button)
@@ -179,7 +189,7 @@ class AdminBacktestFragment : Fragment() {
 
                 if (!startResponse.isSuccessful) {
                     appendLog("❌ Erreur serveur au démarrage : ${startResponse.code()}")
-                    Toast.makeText(requireContext(), "Erreur serveur : ${startResponse.code()}", Toast.LENGTH_SHORT).show()
+                    safeToast("Erreur serveur : ${startResponse.code()}")
                     return@launch
                 }
 
@@ -216,7 +226,7 @@ class AdminBacktestFragment : Fragment() {
                         "error" -> {
                             val errMsg = job.result?.error ?: "Erreur inconnue"
                             appendLog("❌ Erreur pendant le backtest : $errMsg")
-                            Toast.makeText(requireContext(), "Erreur backtest : $errMsg", Toast.LENGTH_LONG).show()
+                            safeToast("Erreur backtest : $errMsg")
                             return@launch
                         }
                         else -> {
@@ -226,11 +236,11 @@ class AdminBacktestFragment : Fragment() {
                 }
 
                 appendLog("⏱️ Délai maximum dépassé (7,5 min). Réessayez plus tard.")
-                Toast.makeText(requireContext(), "Le backtest prend trop de temps, réessayez plus tard.", Toast.LENGTH_LONG).show()
+                safeToast("Le backtest prend trop de temps, réessayez plus tard.")
 
             } catch (e: Exception) {
                 appendLog("❌ Erreur : ${e.message}")
-                Toast.makeText(requireContext(), "Erreur : ${e.message}", Toast.LENGTH_LONG).show()
+                safeToast("Erreur : ${e.message}")
             } finally {
                 if (_binding != null) {
                     binding.btnRunBacktest.isEnabled = true
@@ -250,14 +260,14 @@ class AdminBacktestFragment : Fragment() {
         if (!body.error.isNullOrBlank()) {
             appendLog("⚠️ ${body.error}")
             appendLog("💡 Astuce : utilisez d'abord le bouton \"Télécharger l'historique\" ci-dessus.")
-            Toast.makeText(requireContext(), "Backtest impossible : données manquantes.", Toast.LENGTH_LONG).show()
+            safeToast("Backtest impossible : données manquantes.")
             return
         }
 
         val m = body.metrics
         if (m == null) {
             appendLog("⚠️ Réponse du serveur sans résultats exploitables.")
-            Toast.makeText(requireContext(), "Aucun résultat exploitable.", Toast.LENGTH_SHORT).show()
+            safeToast("Aucun résultat exploitable.")
             return
         }
 
@@ -289,7 +299,7 @@ class AdminBacktestFragment : Fragment() {
 
         appendLog("✅ Audit terminé avec succès !")
         binding.cardResults.visibility = View.VISIBLE
-        Toast.makeText(requireContext(), "✅ Audit Backtest terminé !", Toast.LENGTH_SHORT).show()
+        safeToast("✅ Audit Backtest terminé !")
     }
 
     override fun onDestroyView() {
