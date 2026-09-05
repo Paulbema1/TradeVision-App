@@ -35,44 +35,44 @@ class AdminControlFragment : Fragment() {
         loadKeysMetrics()
     }
 
+    private fun safeToast(message: String) {
+        val ctx = context ?: return
+        Toast.makeText(ctx, message, Toast.LENGTH_SHORT).show()
+    }
+
     private fun triggerGlobalScan() {
         binding.btnScanAll.isEnabled = false
         binding.btnScanAll.text = "⚡ SCANNING MARKETS..."
 
-        lifecycleScope.launch {
+        // viewLifecycleOwner.lifecycleScope (et non lifecycleScope) : ce coroutine
+        // est annulé dès que la VUE est détruite (changement d'écran), pas seulement
+        // quand le Fragment lui-même l'est (qui arrive bien plus tard). Sans ça, une
+        // réponse réseau arrivant après avoir quitté l'écran essaie d'écrire dans
+        // binding déjà null -> NullPointerException (crash confirmé en prod).
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val api = ApiClient.getApiService(requireContext())
                 val response = api.scanAll()
 
                 if (response.isSuccessful) {
-                    Toast.makeText(
-                        requireContext(),
-                        "⚡ SCAN GLOBAL TERMINÉ !",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    safeToast("⚡ SCAN GLOBAL TERMINÉ !")
                 } else {
-                    Toast.makeText(
-                        requireContext(),
-                        "Scan exécuté (Code : ${response.code()})",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    safeToast("Scan exécuté (Code : ${response.code()})")
                 }
             } catch (e: Exception) {
-                Toast.makeText(
-                    requireContext(),
-                    "Erreur réseau : ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                safeToast("Erreur réseau : ${e.message}")
             } finally {
-                binding.btnScanAll.isEnabled = true
-                binding.btnScanAll.text = "⚡ LAUNCH GLOBAL SCAN"
-                loadKeysMetrics()
+                if (_binding != null) {
+                    binding.btnScanAll.isEnabled = true
+                    binding.btnScanAll.text = "⚡ LAUNCH GLOBAL SCAN"
+                    loadKeysMetrics()
+                }
             }
         }
     }
 
     private fun loadKeysMetrics() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val api = ApiClient.getApiService(requireContext())
                 val response = api.getKeysMetrics()
@@ -83,12 +83,18 @@ class AdminControlFragment : Fragment() {
                         val statusEmoji = if (item.isReady) "🟢 AVAILABLE" else "🔴 COOLDOWN (${item.cooldownRemainingSec}s)"
                         "${item.name} : $statusEmoji\nReq=${item.totalRequests} | Success=${item.totalSuccess} | 429=${item.total429}"
                     }
-                    binding.tvKeysStatus.text = text
+                    if (_binding != null) {
+                        binding.tvKeysStatus.text = text
+                    }
                 } else {
-                    binding.tvKeysStatus.text = "Clés Twelve Data : 🟢 AVAILABLE (Active)"
+                    if (_binding != null) {
+                        binding.tvKeysStatus.text = "Clés Twelve Data : 🟢 AVAILABLE (Active)"
+                    }
                 }
             } catch (e: Exception) {
-                binding.tvKeysStatus.text = "Clés Twelve Data : 🟢 AVAILABLE (Active)"
+                if (_binding != null) {
+                    binding.tvKeysStatus.text = "Clés Twelve Data : 🟢 AVAILABLE (Active)"
+                }
             }
         }
     }
@@ -96,26 +102,20 @@ class AdminControlFragment : Fragment() {
     private fun clearCache() {
         binding.btnClearCache.isEnabled = false
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val api = ApiClient.getApiService(requireContext())
                 val response = api.clearCache()
 
                 if (response.isSuccessful) {
-                    Toast.makeText(
-                        requireContext(),
-                        "🧹 Cache mémoire vidé avec succès !",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    safeToast("🧹 Cache mémoire vidé avec succès !")
                 }
             } catch (e: Exception) {
-                Toast.makeText(
-                    requireContext(),
-                    "Cache mémoire vidé !",
-                    Toast.LENGTH_SHORT
-                ).show()
+                safeToast("Cache mémoire vidé !")
             } finally {
-                binding.btnClearCache.isEnabled = true
+                if (_binding != null) {
+                    binding.btnClearCache.isEnabled = true
+                }
             }
         }
     }
@@ -125,3 +125,4 @@ class AdminControlFragment : Fragment() {
         _binding = null
     }
 }
+
