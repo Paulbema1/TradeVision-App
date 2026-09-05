@@ -26,6 +26,7 @@ import com.tradevision.ai.ui.auth.LoginActivity
 import com.tradevision.ai.ui.user.HistoryFragment
 import com.tradevision.ai.ui.user.ProfileFragment
 import com.tradevision.ai.ui.user.SignalFragment
+import com.tradevision.ai.utils.CrashLogger
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -52,6 +53,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Capteur de crash minimal (diagnostic sans logcat/adb) — voir CrashLogger.kt.
+        CrashLogger.install(this)
+        CrashLogger.showLastCrashIfAny(this)
 
         sessionManager = SessionManager(this)
         userRole = sessionManager.getRole()
@@ -127,3 +132,4 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
 }
+
