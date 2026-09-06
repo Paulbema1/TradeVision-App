@@ -28,27 +28,43 @@ class AdminMembersFragment : Fragment() {
     private fun loadMembers() {
         binding.progressBar.visibility = View.VISIBLE
         binding.tvMembersContent.text = "Chargement..."
-        lifecycleScope.launch {
+
+        // viewLifecycleOwner.lifecycleScope (et non lifecycleScope) : annule le
+        // coroutine dès que la VUE est détruite (changement d'écran), pas seulement
+        // quand le Fragment lui-même l'est (bien plus tard). Même bug corrigé dans
+        // SignalFragment, AdminControlFragment et HistoryFragment (crash confirmé en prod).
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val api = ApiClient.getApiService(requireContext())
                 val res = api.listUsers()
                 if (res.isSuccessful && res.body() != null) {
                     val users = res.body()!!
                     if (users.isEmpty()) {
-                        binding.tvMembersContent.text = "Aucun membre."
+                        if (_binding != null) {
+                            binding.tvMembersContent.text = "Aucun membre."
+                        }
                     } else {
-                        binding.tvMembersContent.text = "TOTAL: ${users.size}\n\n" + users.joinToString("\n\n----------------\n\n") { u ->
+                        val text = "TOTAL: ${users.size}\n\n" + users.joinToString("\n\n----------------\n\n") { u ->
                             val notif = if (u.hasFcmToken) "Notif ON" else "Notif OFF"
                             "${u.username} [${u.role}]\n${u.createdAt}\n$notif"
                         }
+                        if (_binding != null) {
+                            binding.tvMembersContent.text = text
+                        }
                     }
                 } else {
-                    binding.tvMembersContent.text = "Erreur ${res.code()}"
+                    if (_binding != null) {
+                        binding.tvMembersContent.text = "Erreur ${res.code()}"
+                    }
                 }
             } catch (e: Exception) {
-                binding.tvMembersContent.text = "Erreur: ${e.message}"
+                if (_binding != null) {
+                    binding.tvMembersContent.text = "Erreur: ${e.message}"
+                }
             } finally {
-                binding.progressBar.visibility = View.GONE
+                if (_binding != null) {
+                    binding.progressBar.visibility = View.GONE
+                }
             }
         }
     }
@@ -58,3 +74,4 @@ class AdminMembersFragment : Fragment() {
         _binding = null
     }
 }
+

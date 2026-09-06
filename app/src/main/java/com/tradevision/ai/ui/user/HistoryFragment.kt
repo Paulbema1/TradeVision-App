@@ -35,7 +35,11 @@ class HistoryFragment : Fragment() {
         binding.progressBar.visibility = View.VISIBLE
         binding.tvHistoryContent.text = "Chargement de l'historique..."
 
-        lifecycleScope.launch {
+        // viewLifecycleOwner.lifecycleScope (et non lifecycleScope) : annule le
+        // coroutine dès que la VUE est détruite (changement d'écran), pas seulement
+        // quand le Fragment lui-même l'est (bien plus tard). Même bug corrigé dans
+        // SignalFragment et AdminControlFragment (crash confirmé en prod).
+        viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val api = ApiClient.getApiService(requireContext())
                 val response = api.getHistory(limit = 30)
@@ -45,7 +49,9 @@ class HistoryFragment : Fragment() {
                     val actionItems = items.filter { it.action != "WAIT" }
 
                     if (actionItems.isEmpty()) {
-                        binding.tvHistoryContent.text = "Aucun signal d'action (BUY/SELL) dans l'historique."
+                        if (_binding != null) {
+                            binding.tvHistoryContent.text = "Aucun signal d'action (BUY/SELL) dans l'historique."
+                        }
                     } else {
                         val formattedText = actionItems.joinToString("\n\n─────────────────────────────\n\n") { item ->
                             val actionTag = if (item.action == "BUY") "🟢 BUY" else "🔴 SELL"
@@ -56,15 +62,23 @@ class HistoryFragment : Fragment() {
                             Date : ${item.createdAt}
                             """.trimIndent()
                         }
-                        binding.tvHistoryContent.text = formattedText
+                        if (_binding != null) {
+                            binding.tvHistoryContent.text = formattedText
+                        }
                     }
                 } else {
-                    binding.tvHistoryContent.text = "Erreur de chargement (${response.code()})"
+                    if (_binding != null) {
+                        binding.tvHistoryContent.text = "Erreur de chargement (${response.code()})"
+                    }
                 }
             } catch (e: Exception) {
-                binding.tvHistoryContent.text = "Erreur réseau : ${e.message}"
+                if (_binding != null) {
+                    binding.tvHistoryContent.text = "Erreur réseau : ${e.message}"
+                }
             } finally {
-                binding.progressBar.visibility = View.GONE
+                if (_binding != null) {
+                    binding.progressBar.visibility = View.GONE
+                }
             }
         }
     }
@@ -74,3 +88,4 @@ class HistoryFragment : Fragment() {
         _binding = null
     }
 }
+
