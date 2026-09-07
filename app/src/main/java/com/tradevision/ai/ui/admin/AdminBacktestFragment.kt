@@ -200,7 +200,7 @@ class AdminBacktestFragment : Fragment() {
                 appendLog("⏳ Calcul en cours côté serveur (peut prendre plusieurs minutes)...")
 
                 var attempts = 0
-                val maxAttempts = 90 // 90 x 5s = 7.5 min max avant abandon
+                val maxAttempts = 300 // 300 x 5s = 25 min max avant abandon (backtest optimise ~12-13 min attendues)
 
                 while (attempts < maxAttempts) {
                     delay(5000)
