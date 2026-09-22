@@ -19,7 +19,6 @@ import com.tradevision.ai.data.network.ApiClient
 import com.tradevision.ai.data.network.SessionManager
 import com.tradevision.ai.databinding.FragmentSignalBinding
 import com.tradevision.ai.utils.Constants
-import com.tradevision.ai.utils.NotificationHelper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -157,24 +156,14 @@ class SignalFragment : Fragment() {
                         binding.tvTP3.text = String.format(Locale.US, formatStr, sig.takeProfit3 ?: 0.0)
                         binding.tvRR.text = "Risk / Reward : 1 : ${sig.riskReward ?: 2.5}"
 
-                        // Deduplication PERSISTANTE (survit a la destruction du fragment,
-                        // contrairement a une simple variable en memoire). Utilise signal_id
-                        // quand disponible (backend v9.1.0+), sinon repli sur une empreinte
-                        // locale pour rester fonctionnel meme sans signal_id.
-                        val dedupKey = sig.signalId ?: "${sig.symbol}_${sig.action}_${sig.entryPrice}"
-                        if (!sessionManager.hasSeenSignal(dedupKey) && sig.confidence >= 70) {
-                            sessionManager.markSignalSeen(dedupKey)
-                            NotificationHelper.showSignalNotification(
-                                context = requireContext(),
-                                symbol = sig.symbol,
-                                action = sig.action,
-                                confidence = sig.confidence,
-                                entry = sig.entryPrice,
-                                sl = sig.stopLoss,
-                                tp1 = sig.takeProfit1,
-                                signalId = sig.signalId
-                            )
-                        }
+                        // NOTE (correction v9.1.1) : plus de notification locale déclenchée ici.
+                        // Cet écran interroge /signals/analyze, qui ne passe JAMAIS par
+                        // persist_and_dispatch côté serveur (pas d'anti-stacking, pas de
+                        // dédup 15 min, un nouveau signal_id à chaque appel). Déclencher une
+                        // notification depuis ce polling produisait des alertes répétées et
+                        // non fiables, en doublon avec le vrai système FCM (auto-scan serveur,
+                        // qui lui respecte tous les garde-fous). Les notifications viennent
+                        // désormais UNIQUEMENT de FCMService.kt.
                     } else {
                         binding.levelsContainer.visibility = View.GONE
                     }
@@ -329,4 +318,3 @@ class SignalFragment : Fragment() {
         _binding = null
     }
 }
-
